@@ -132,6 +132,11 @@ button {
   background: color-mix(in srgb, var(--md-surface) 88%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  /* One instance per page (unlike the per-post carousels above), so
+     permanently isolating it into its own layer is the correct use of
+     will-change: it stops the browser from repainting the blur against the
+     whole scrolling feed underneath on every frame. */
+  will-change: transform;
 }
 
 .appbar h1 {
@@ -248,6 +253,12 @@ button {
   border-radius: var(--radius-lg);
   box-shadow: var(--md-shadow);
   overflow: hidden;
+  /* Skip layout/paint entirely for posts scrolled out of view - the single
+     biggest lever for a long feed on mobile. contain-intrinsic-size is a
+     rough placeholder height so the scrollbar/scroll position don't jump
+     around as posts pop in and out of view. */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 420px;
 }
 
 .carousel-wrap {
@@ -256,11 +267,13 @@ button {
 }
 
 /* Paging is JS-driven (transform: translateX) - see createHSwipePager in
-   app.js - not native scroll, so no scroll-snap/overflow here. */
+   app.js - not native scroll, so no scroll-snap/overflow here. will-change
+   is applied/removed by JS only while a drag or snap animation is actually
+   happening: a feed can have dozens of these, and leaving every one
+   permanently promoted to its own GPU layer is what made scrolling laggy. */
 .carousel {
   display: flex;
   touch-action: pan-y;
-  will-change: transform;
 }
 
 .slide {

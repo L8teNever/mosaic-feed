@@ -211,6 +211,7 @@ function createHSwipePager(wrap, track, count, onIndexChange) {
     newIndex = Math.max(0, Math.min(count - 1, newIndex));
     state.index = newIndex;
     const offset = newIndex * wrap.clientWidth;
+    track.style.willChange = "transform";
     track.style.transition = animate ? "transform 0.32s cubic-bezier(.22,.61,.36,1)" : "none";
     track.style.transform = `translateX(-${offset}px)`;
     if (animate) {
@@ -219,9 +220,12 @@ function createHSwipePager(wrap, track, count, onIndexChange) {
         "transitionend",
         () => {
           state.transitioning = false;
+          track.style.willChange = "auto";
         },
         { once: true }
       );
+    } else {
+      track.style.willChange = "auto";
     }
     onIndexChange(newIndex);
   }
@@ -255,7 +259,10 @@ function createHSwipePager(wrap, track, count, onIndexChange) {
       if (!axis) {
         if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
         axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-        if (axis === "x") track.style.transition = "none";
+        if (axis === "x") {
+          track.style.transition = "none";
+          track.style.willChange = "transform";
+        }
       }
       if (axis !== "x") return; // vertical: let the page (or the TikTok pager) handle it
 
@@ -318,6 +325,7 @@ function renderSlide(img) {
   const image = document.createElement("img");
   image.src = img.url;
   image.loading = "lazy";
+  image.decoding = "async";
   image.alt = "";
   image.draggable = false;
   slide.appendChild(image);
@@ -746,7 +754,7 @@ async function initStatsPage() {
     const tile = document.createElement("div");
     tile.className = "stat-tile";
     tile.innerHTML = `
-      <img src="${item.url}" loading="lazy" alt="" draggable="false" />
+      <img src="${item.url}" loading="lazy" decoding="async" alt="" draggable="false" />
       <span class="stat-rank">${i + 1}</span>
       <span class="stat-likes">${ICON_HEART}${item.like_count}</span>
     `;
