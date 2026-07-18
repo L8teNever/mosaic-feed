@@ -225,7 +225,9 @@ def group_by_similarity(images):
 def api_recompute_similarity():
     """On-demand version of the startup backfill - lets images uploaded
     before this feature existed (or after a future hashing tweak) get
-    caught up without restarting the server."""
+    caught up without restarting the server. Commits after every row so a
+    large library never holds the write lock long enough to block other
+    requests (uploads, likes, deletes) for the whole run."""
     db = get_db()
     rows = db.execute("SELECT id, filename FROM images").fetchall()
 
@@ -237,9 +239,9 @@ def api_recompute_similarity():
         except (FileNotFoundError, OSError):
             continue
         db.execute("UPDATE images SET phash = ? WHERE id = ?", (phash, row["id"]))
+        db.commit()
         updated += 1
 
-    db.commit()
     return jsonify({"updated": updated, "total": len(rows)})
 
 
