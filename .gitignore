@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.claude/
 
 feed.db
 feed.db-wal
