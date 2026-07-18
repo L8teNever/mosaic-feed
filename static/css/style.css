@@ -116,10 +116,22 @@ button {
   align-items: center;
   gap: 4px;
   padding: 12px 16px;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+/* The frosted-glass background lives on a pseudo-element rather than on
+   .appbar itself: backdrop-filter on an element makes it a containing block
+   for its position:fixed descendants, which would hijack the rail-mark /
+   appbar-actions / #backBtn fixed positioning (used at rail width) into
+   being relative to the appbar instead of the viewport. */
+.appbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: color-mix(in srgb, var(--md-surface) 88%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--md-outline-variant);
 }
 
 .appbar h1 {
@@ -128,6 +140,30 @@ button {
   letter-spacing: 0.01em;
   margin: 0;
   flex: 1;
+}
+
+.appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Decorative brand mark - only shown at rail width (see Responsive section),
+   where it caps the top of the left navigation rail. */
+.rail-mark {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  align-items: center;
+  justify-content: center;
+}
+
+.rail-mark svg {
+  width: 20px;
+  height: 20px;
 }
 
 .icon-btn {
@@ -700,13 +736,51 @@ button {
 /* ---------- Responsive ---------- */
 
 @media (min-width: 900px) {
-  .page {
-    max-width: 680px;
-    padding-top: 24px;
+  /* Past phone/tablet width, a lone centered column reads as an unfinished
+     mobile layout stretched onto a big screen. Reclaim the left margin as a
+     persistent navigation rail instead - the appbar's icon buttons and the
+     lone leading icon (brand mark or back button) relocate there, same
+     elements and IDs, just reflowed via position - no markup duplicated. */
+  .rail-mark,
+  #backBtn {
+    position: fixed;
+    top: 20px;
+    left: 22px;
+    z-index: 26;
+  }
+
+  .rail-mark {
+    display: flex;
+  }
+
+  .appbar-actions {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 25;
+    width: 84px;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 76px;
+    background: var(--md-surface-container);
+    border-right: 1px solid var(--md-outline-variant);
   }
 
   .appbar {
     padding: 14px 24px;
+    margin-left: 84px;
+  }
+
+  .page {
+    max-width: 720px;
+    margin-left: calc(84px + (100% - 84px - 720px) / 2);
+    padding-top: 24px;
+  }
+
+  .tiktok-feed {
+    max-width: 480px;
+    margin: 0 auto;
   }
 }
 

@@ -3,39 +3,49 @@
 {% block body %}
 <meta name="cf-worker-bypass" content="true" />
 <header class="appbar">
+  <div class="rail-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <rect x="3" y="3" width="8" height="8" rx="2"></rect>
+      <rect x="13" y="3" width="8" height="8" rx="2" opacity="0.6"></rect>
+      <rect x="3" y="13" width="8" height="8" rx="2" opacity="0.6"></rect>
+      <rect x="13" y="13" width="8" height="8" rx="2"></rect>
+    </svg>
+  </div>
   <h1>Feed</h1>
-  <button class="icon-btn" id="tiktokBtn" title="Vertikaler Modus" aria-label="Vertikaler Modus">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round">
-      <rect x="4" y="3" width="16" height="7" rx="2"></rect>
-      <rect x="4" y="14" width="16" height="7" rx="2"></rect>
-      <polyline points="9 10.3 12 12.7 15 10.3"></polyline>
-    </svg>
-  </button>
-  <button class="icon-btn" id="shuffleBtn" title="Neu mischen" aria-label="Neu mischen">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round">
-      <polyline points="16 3 21 3 21 8"></polyline>
-      <line x1="4" y1="20" x2="21" y2="3"></line>
-      <polyline points="21 16 21 21 16 21"></polyline>
-      <line x1="15" y1="15" x2="21" y2="21"></line>
-      <line x1="4" y1="4" x2="9" y2="9"></line>
-    </svg>
-  </button>
-  <button class="icon-btn" id="themeBtn" title="Theme wechseln" aria-label="Theme wechseln">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-    </svg>
-  </button>
-  <a class="icon-btn" href="/stats" title="Statistik" aria-label="Statistik">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10"></line>
-      <line x1="12" y1="20" x2="12" y2="4"></line>
-      <line x1="6" y1="20" x2="6" y2="14"></line>
-    </svg>
-  </a>
+  <div class="appbar-actions">
+    <button class="icon-btn" id="tiktokBtn" title="Vertikaler Modus" aria-label="Vertikaler Modus">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <rect x="4" y="3" width="16" height="7" rx="2"></rect>
+        <rect x="4" y="14" width="16" height="7" rx="2"></rect>
+        <polyline points="9 10.3 12 12.7 15 10.3"></polyline>
+      </svg>
+    </button>
+    <button class="icon-btn" id="shuffleBtn" title="Neu mischen" aria-label="Neu mischen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <polyline points="16 3 21 3 21 8"></polyline>
+        <line x1="4" y1="20" x2="21" y2="3"></line>
+        <polyline points="21 16 21 21 16 21"></polyline>
+        <line x1="15" y1="15" x2="21" y2="21"></line>
+        <line x1="4" y1="4" x2="9" y2="9"></line>
+      </svg>
+    </button>
+    <button class="icon-btn" id="themeBtn" title="Theme wechseln" aria-label="Theme wechseln">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+    <a class="icon-btn" href="/stats" title="Statistik" aria-label="Statistik">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+    </a>
+  </div>
 </header>
 
 <main class="page">
@@ -43,14 +53,14 @@
 </main>
 
 <div class="tiktok-view" id="tiktokView" hidden>
-  <button class="icon-btn tiktok-exit" id="tiktokExitBtn" title="Zurück zum Feed" aria-label="Zurück zum Feed">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  </button>
   <div class="tiktok-feed" id="tiktokFeed">
+    <button class="icon-btn tiktok-exit" id="tiktokExitBtn" title="Zurück zum Feed" aria-label="Zurück zum Feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
     <div class="tiktok-track" id="tiktokTrack"></div>
   </div>
 </div>
