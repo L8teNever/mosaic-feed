@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="de">
+
 <head>
+  <meta name="cf-worker-bypass" content="true" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{% block title %}Feed{% endblock %}</title>
@@ -12,9 +14,11 @@
     })();
   </script>
 </head>
+
 <body>
   {% block body %}{% endblock %}
   <script src="/static/js/app.js"></script>
   {% block scripts %}{% endblock %}
 </body>
+
 </html>
