@@ -18,7 +18,15 @@
       "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\audit.py\")",
       "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\check_feed.py\")",
       "Bash(rm -f feed.db*)",
-      "Bash(rm -rf static/uploads/images/*)"
+      "Bash(rm -rf static/uploads/images/*)",
+      "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\seed_null_phash.py\")",
+      "Bash(DATA_DIR=. gunicorn --preload --bind 0.0.0.0:5001 --workers 2 --threads 4 app:app)",
+      "Bash(docker --version)",
+      "PowerShell(docker --version 2>&1)",
+      "Bash(mkdir -p \"C:/Users/Docker/AppData/Local/Temp/claude/c--Users-Docker-Pictures-PIXIPORN/999c9ed3-b3e9-40de-a7f6-f072f6dca38c/scratchpad/old_app_repro\")",
+      "Bash(git show *)",
+      "Bash(cp -r templates static requirements.txt \"C:/Users/Docker/AppData/Local/Temp/claude/c--Users-Docker-Pictures-PIXIPORN/999c9ed3-b3e9-40de-a7f6-f072f6dca38c/scratchpad/old_app_repro/\")",
+      "Bash(cp feed.db \"C:/Users/Docker/AppData/Local/Temp/claude/c--Users-Docker-Pictures-PIXIPORN/999c9ed3-b3e9-40de-a7f6-f072f6dca38c/scratchpad/old_app_repro/\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\Docker\\Pictures\\PIXIPORN"
