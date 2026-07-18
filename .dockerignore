@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+feed.db
+feed.db-wal
+feed.db-shm
+static/uploads/
+data/
+.git/
+.github/

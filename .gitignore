@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+feed.db
+feed.db-wal
+feed.db-shm
+data/
+
+static/uploads/*
+!static/uploads/.gitkeep

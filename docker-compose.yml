@@ -1,0 +1,16 @@
+services:
+  mosaic-feed:
+    image: ghcr.io/l8tenever/mosaic-feed:latest
+    container_name: mosaic-feed
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - DATA_DIR=/app/data
+    volumes:
+      - uploads:/app/static/uploads
+      - data:/app/data
+
+volumes:
+  uploads:
+  data:
