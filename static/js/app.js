@@ -613,9 +613,33 @@ async function uploadFiles(files) {
 
 /* ---------------- Stats page ---------------- */
 
+/* Similarity hashes are already backfilled automatically on server start,
+   but this lets images uploaded before the feature existed (or after a
+   future hashing tweak) get caught up on demand, without a restart. */
+function setupRecomputeSimilarity() {
+  const btn = document.getElementById("recomputeBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    if (btn.classList.contains("spinning")) return;
+    btn.classList.add("spinning");
+
+    try {
+      const res = await fetch("/api/recompute-similarity", { method: "POST" });
+      const data = await res.json();
+      showSnackbar(`Ähnlichkeit aktualisiert: ${data.updated} von ${data.total} Bildern`);
+    } catch (err) {
+      showSnackbar("Aktualisieren fehlgeschlagen.");
+    } finally {
+      btn.classList.remove("spinning");
+    }
+  });
+}
+
 async function initStatsPage() {
   setupPrivacyShield();
   setupThemeToggle();
+  setupRecomputeSimilarity();
   const grid = document.getElementById("statsGrid");
   grid.innerHTML = '<div class="spinner"></div>';
 

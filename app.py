@@ -215,6 +215,28 @@ def group_by_similarity(images):
     return groups
 
 
+@app.route("/api/recompute-similarity", methods=["POST"])
+def api_recompute_similarity():
+    """On-demand version of the startup backfill - lets images uploaded
+    before this feature existed (or after a future hashing tweak) get
+    caught up without restarting the server."""
+    db = get_db()
+    rows = db.execute("SELECT id, filename FROM images").fetchall()
+
+    updated = 0
+    for row in rows:
+        try:
+            with Image.open(IMAGE_DIR / f"{row['filename']}.webp") as img:
+                phash = compute_phash(img)
+        except (FileNotFoundError, OSError):
+            continue
+        db.execute("UPDATE images SET phash = ? WHERE id = ?", (phash, row["id"]))
+        updated += 1
+
+    db.commit()
+    return jsonify({"updated": updated, "total": len(rows)})
+
+
 @app.route("/api/upload", methods=["POST"])
 def api_upload():
     files = request.files.getlist("files")
