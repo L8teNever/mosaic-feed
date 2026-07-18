@@ -67,6 +67,11 @@ def init_db():
     conn.close()
 
 
+# Runs on import, not just under `python app.py` - gunicorn (used in Docker)
+# imports this module as `app:app` and never hits the __main__ block below.
+init_db()
+
+
 def process_and_store(data: bytes):
     """Normalize orientation, downscale once, and persist a single WEBP. Returns (name, width, height)."""
     with Image.open(io.BytesIO(data)) as img:
@@ -216,5 +221,4 @@ def api_stats():
 
 
 if __name__ == "__main__":
-    init_db()
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
