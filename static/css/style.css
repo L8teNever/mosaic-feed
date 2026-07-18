@@ -252,23 +252,19 @@ button {
 
 .carousel-wrap {
   position: relative;
+  overflow: hidden;
 }
 
+/* Paging is JS-driven (transform: translateX) - see createHSwipePager in
+   app.js - not native scroll, so no scroll-snap/overflow here. */
 .carousel {
   display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.carousel::-webkit-scrollbar {
-  display: none;
+  touch-action: pan-y;
+  will-change: transform;
 }
 
 .slide {
   flex: 0 0 100%;
-  scroll-snap-align: start;
   position: relative;
 }
 

@@ -154,7 +154,13 @@ async function loadFeed() {
 }
 
 /* Shared by the normal feed and the TikTok view: builds the swipeable
-   carousel (images + dots + prev/next) that a post is made of. */
+   carousel (images + dots + prev/next) that a post is made of.
+
+   Paging is JS-driven (transform: translateX), same approach as the
+   TikTok view's vertical pager and for the same reason: native scroll-snap
+   momentum can carry a hard swipe past more than one slide. A touch drag
+   still follows the finger live, but on release it can only ever land on
+   the adjacent slide. */
 function buildCarouselWrap(images) {
   const wrap = document.createElement("div");
   wrap.className = "carousel-wrap";
@@ -174,36 +180,120 @@ function buildCarouselWrap(images) {
     });
     wrap.appendChild(dots);
 
+    const pager = createHSwipePager(wrap, carousel, images.length, (idx) => {
+      [...dots.children].forEach((d, i) => d.classList.toggle("active", i === idx));
+    });
+
     const prev = document.createElement("button");
     prev.className = "carousel-nav prev";
     prev.innerHTML = ICON_CHEVRON_LEFT;
-    prev.addEventListener("click", () =>
-      carousel.scrollBy({ left: -carousel.clientWidth, behavior: "smooth" })
-    );
+    prev.addEventListener("click", () => pager.goTo(pager.index - 1));
 
     const next = document.createElement("button");
     next.className = "carousel-nav next";
     next.innerHTML = ICON_CHEVRON_RIGHT;
-    next.addEventListener("click", () =>
-      carousel.scrollBy({ left: carousel.clientWidth, behavior: "smooth" })
-    );
+    next.addEventListener("click", () => pager.goTo(pager.index + 1));
 
     wrap.appendChild(prev);
     wrap.appendChild(next);
-
-    let ticking = false;
-    carousel.addEventListener("scroll", () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const idx = Math.round(carousel.scrollLeft / carousel.clientWidth);
-        [...dots.children].forEach((d, i) => d.classList.toggle("active", i === idx));
-        ticking = false;
-      });
-    });
   }
 
   return wrap;
+}
+
+/* One instance per carousel (a page can have many at once, e.g. the whole
+   feed) - unlike the single global TikTok pager, this keeps its state in a
+   closure rather than a shared object. */
+function createHSwipePager(wrap, track, count, onIndexChange) {
+  const state = { index: 0, transitioning: false };
+
+  function goTo(newIndex, animate = true) {
+    newIndex = Math.max(0, Math.min(count - 1, newIndex));
+    state.index = newIndex;
+    const offset = newIndex * wrap.clientWidth;
+    track.style.transition = animate ? "transform 0.32s cubic-bezier(.22,.61,.36,1)" : "none";
+    track.style.transform = `translateX(-${offset}px)`;
+    if (animate) {
+      state.transitioning = true;
+      track.addEventListener(
+        "transitionend",
+        () => {
+          state.transitioning = false;
+        },
+        { once: true }
+      );
+    }
+    onIndexChange(newIndex);
+  }
+
+  let startX = 0;
+  let startY = 0;
+  let dragDelta = 0;
+  let axis = null;
+  let dragging = false;
+
+  wrap.addEventListener(
+    "touchstart",
+    (e) => {
+      if (state.transitioning) return;
+      dragging = true;
+      axis = null;
+      dragDelta = 0;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    },
+    { passive: true }
+  );
+
+  wrap.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+
+      if (!axis) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+        if (axis === "x") track.style.transition = "none";
+      }
+      if (axis !== "x") return; // vertical: let the page (or the TikTok pager) handle it
+
+      e.preventDefault();
+      dragDelta = dx;
+      if ((state.index === 0 && dragDelta > 0) || (state.index === count - 1 && dragDelta < 0)) {
+        dragDelta *= 0.35; // rubber-band at the first/last image
+      }
+      const base = state.index * wrap.clientWidth;
+      track.style.transform = `translateX(${-base + dragDelta}px)`;
+    },
+    { passive: false }
+  );
+
+  wrap.addEventListener("touchend", () => {
+    if (!dragging) return;
+    dragging = false;
+    if (axis !== "x") {
+      axis = null;
+      return;
+    }
+
+    const threshold = wrap.clientWidth * 0.18;
+    if (dragDelta <= -threshold) goTo(state.index + 1);
+    else if (dragDelta >= threshold) goTo(state.index - 1);
+    else goTo(state.index);
+    axis = null;
+    dragDelta = 0;
+  });
+
+  window.addEventListener("resize", () => goTo(state.index, false));
+
+  return {
+    goTo,
+    get index() {
+      return state.index;
+    },
+  };
 }
 
 function renderPost(images) {

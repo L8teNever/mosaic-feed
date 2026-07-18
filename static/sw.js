@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "mosaic-shell-v1";
+const CACHE_NAME = "mosaic-shell-v2";
 const APP_SHELL = ["/", "/stats", "/static/css/style.css", "/static/js/app.js", "/static/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -28,18 +28,19 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Network-first: an actively developed app shouldn't get stuck showing an
+  // old cached version to a returning visitor just because one happened to
+  // be cached. The cache only ever serves as a fallback when there's no
+  // network at all.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
   );
 });
