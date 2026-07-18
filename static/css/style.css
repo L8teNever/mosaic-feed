@@ -91,6 +91,11 @@ body {
   min-height: 100vh;
   transition: background-color 0.2s ease, color 0.2s ease;
   padding-bottom: 96px;
+  /* This is a media feed, not a text page: a long press should never select
+     text, pop the OS "save image" callout, or show a context menu. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 a {
@@ -233,6 +238,51 @@ button {
   height: 100%;
   object-fit: cover;
   background: var(--md-surface-container-highest);
+  /* Disable native double-tap-to-zoom so a double-tap reliably fires a real
+     dblclick event for our like gesture instead. */
+  touch-action: manipulation;
+  -webkit-user-drag: none;
+}
+
+.heart-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  transform: translate(-50%, -50%) scale(0.5);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.4));
+  animation: heartBurst 0.7s ease forwards;
+}
+
+.heart-burst svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes heartBurst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .dots {
@@ -361,6 +411,77 @@ button {
   stroke: #fff;
 }
 
+/* ---------- TikTok mode: full-screen vertical swipe ---------- */
+
+.tiktok-view {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+}
+
+.tiktok-feed {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tiktok-post {
+  height: 100dvh;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.tiktok-post .carousel-wrap,
+.tiktok-post .carousel,
+.tiktok-post .slide {
+  height: 100%;
+}
+
+.tiktok-post .slide-actions {
+  right: 14px;
+  bottom: 90px;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tiktok-post .pill-btn {
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 8px;
+  font-size: 0.72rem;
+}
+
+.tiktok-post .pill-btn svg {
+  width: 26px;
+  height: 26px;
+}
+
+.tiktok-post .pill-btn.delete-btn {
+  padding: 10px;
+}
+
+.tiktok-exit {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: 14px;
+  z-index: 65;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.tiktok-exit:hover {
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+.tiktok-view .empty-state {
+  color: #fff;
+  padding-top: 40vh;
+}
+
 /* ---------- FAB & upload ---------- */
 
 .fab {
@@ -452,7 +573,7 @@ button {
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%) translateY(20px);
-  z-index: 50;
+  z-index: 70;
   background: var(--md-on-surface);
   color: var(--md-surface);
   padding: 12px 20px;

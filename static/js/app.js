@@ -5,8 +5,16 @@
    The aggregate like_count in the database is what the stats page reads. */
 const likedThisView = new Set();
 
+/* Posts from the last /api/feed call. Both the normal feed and the TikTok
+   view render from this same array so they always agree on what a "post" is;
+   only the layout differs. */
+let currentPosts = [];
+let tiktokBuilt = false;
+
 const ICON_HEART =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+const ICON_HEART_FILLED =
+  '<svg viewBox="0 0 24 24"><path d="M12 21s-6.7-4.35-9.3-8.1C1 10.1 1.6 6.9 4.2 5.3c2.2-1.4 5-.8 6.6 1.1l1.2 1.4 1.2-1.4c1.6-1.9 4.4-2.5 6.6-1.1 2.6 1.6 3.2 4.8 1.5 7.6C18.7 16.65 12 21 12 21z" fill="currentColor"/></svg>';
 const ICON_TRASH =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
 const ICON_CHEVRON_LEFT =
@@ -15,6 +23,8 @@ const ICON_CHEVRON_RIGHT =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
 const ICON_IMAGE =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+
+document.addEventListener("contextmenu", (e) => e.preventDefault());
 
 function setupThemeToggle() {
   const btn = document.getElementById("themeBtn");
@@ -38,10 +48,17 @@ function showSnackbar(message) {
   showSnackbar._t = setTimeout(() => el.classList.remove("visible"), 3200);
 }
 
+function emptyStateHTML(message) {
+  return (
+    '<div class="empty-state">' + ICON_IMAGE + `<div>${message}</div></div>`
+  );
+}
+
 /* ---------------- Feed page ---------------- */
 
 function initFeedPage() {
   setupThemeToggle();
+  setupTiktokMode();
   loadFeed();
 
   document.getElementById("shuffleBtn").addEventListener("click", loadFeed);
@@ -83,32 +100,26 @@ async function loadFeed() {
 
   const res = await fetch("/api/feed");
   const data = await res.json();
+  currentPosts = data.posts;
+  tiktokBuilt = false;
 
-  if (!data.posts.length) {
-    feed.innerHTML =
-      '<div class="empty-state">' +
-      ICON_IMAGE +
-      "<div>Noch keine Bilder. Lade welche hoch, um loszulegen.</div></div>";
+  if (!currentPosts.length) {
+    feed.innerHTML = emptyStateHTML("Noch keine Bilder. Lade welche hoch, um loszulegen.");
     return;
   }
 
   feed.innerHTML = "";
-  data.posts.forEach((post) => feed.appendChild(renderPost(post)));
+  currentPosts.forEach((post) => feed.appendChild(renderPost(post)));
 }
 
-function renderPost(images) {
-  const post = document.createElement("article");
-  post.className = "post";
-
+/* Shared by the normal feed and the TikTok view: builds the swipeable
+   carousel (images + dots + prev/next) that a post is made of. */
+function buildCarouselWrap(images) {
   const wrap = document.createElement("div");
   wrap.className = "carousel-wrap";
 
-  const ratio = clampRatio(images[0].width / images[0].height);
-  wrap.style.aspectRatio = ratio;
-
   const carousel = document.createElement("div");
   carousel.className = "carousel";
-
   images.forEach((img) => carousel.appendChild(renderSlide(img)));
   wrap.appendChild(carousel);
 
@@ -125,12 +136,16 @@ function renderPost(images) {
     const prev = document.createElement("button");
     prev.className = "carousel-nav prev";
     prev.innerHTML = ICON_CHEVRON_LEFT;
-    prev.addEventListener("click", () => carousel.scrollBy({ left: -carousel.clientWidth, behavior: "smooth" }));
+    prev.addEventListener("click", () =>
+      carousel.scrollBy({ left: -carousel.clientWidth, behavior: "smooth" })
+    );
 
     const next = document.createElement("button");
     next.className = "carousel-nav next";
     next.innerHTML = ICON_CHEVRON_RIGHT;
-    next.addEventListener("click", () => carousel.scrollBy({ left: carousel.clientWidth, behavior: "smooth" }));
+    next.addEventListener("click", () =>
+      carousel.scrollBy({ left: carousel.clientWidth, behavior: "smooth" })
+    );
 
     wrap.appendChild(prev);
     wrap.appendChild(next);
@@ -147,6 +162,14 @@ function renderPost(images) {
     });
   }
 
+  return wrap;
+}
+
+function renderPost(images) {
+  const post = document.createElement("article");
+  post.className = "post";
+  const wrap = buildCarouselWrap(images);
+  wrap.style.aspectRatio = clampRatio(images[0].width / images[0].height);
   post.appendChild(wrap);
   return post;
 }
@@ -165,54 +188,111 @@ function renderSlide(img) {
   image.src = img.url;
   image.loading = "lazy";
   image.alt = "";
+  image.draggable = false;
   slide.appendChild(image);
 
+  slide.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    handleDoubleTapLike(img.id, slide);
+  });
+
+  slide.appendChild(buildActions(img.id, img.like_count));
+
+  return slide;
+}
+
+function buildActions(imageId, likeCount) {
   const actions = document.createElement("div");
   actions.className = "slide-actions";
 
   const likeBtn = document.createElement("button");
   likeBtn.className = "pill-btn like-btn";
+  likeBtn.classList.toggle("liked", likedThisView.has(imageId));
   const countSpan = document.createElement("span");
-  countSpan.textContent = img.like_count;
+  countSpan.textContent = likeCount;
   likeBtn.innerHTML = ICON_HEART;
   likeBtn.appendChild(countSpan);
-  likeBtn.addEventListener("click", () => toggleLike(img.id, likeBtn, countSpan));
+  likeBtn.addEventListener("click", () => toggleLike(imageId));
 
   const delBtn = document.createElement("button");
   delBtn.className = "pill-btn delete-btn";
   delBtn.innerHTML = ICON_TRASH;
   delBtn.title = "Für immer löschen";
-  delBtn.addEventListener("click", () => deleteImage(img.id, slide, slide.closest(".post")));
+  delBtn.addEventListener("click", () => deleteImage(imageId));
 
   actions.appendChild(likeBtn);
   actions.appendChild(delBtn);
-  slide.appendChild(actions);
-
-  return slide;
+  return actions;
 }
 
-async function toggleLike(imageId, btn, countSpan) {
+/* ---------------- Likes ---------------- */
+
+async function toggleLike(imageId) {
   const isLiked = likedThisView.has(imageId);
-  btn.classList.toggle("liked", !isLiked);
   const endpoint = isLiked ? "unlike" : "like";
 
   try {
     const res = await fetch(`/api/${endpoint}/${imageId}`, { method: "POST" });
     const data = await res.json();
-    if (typeof data.like_count === "number") countSpan.textContent = data.like_count;
-    if (isLiked) {
-      likedThisView.delete(imageId);
-    } else {
-      likedThisView.add(imageId);
-      btn.classList.add("liked");
-      setTimeout(() => btn.classList.remove("liked"), 260);
+    const nowLiked = !isLiked;
+    if (nowLiked) likedThisView.add(imageId);
+    else likedThisView.delete(imageId);
+    if (typeof data.like_count === "number") {
+      applyLikeState(imageId, data.like_count, nowLiked);
+      updateStoredLikeCount(imageId, data.like_count);
     }
   } catch (err) {
-    btn.classList.toggle("liked", isLiked);
+    showSnackbar("Aktion fehlgeschlagen.");
   }
 }
 
-async function deleteImage(imageId, slideEl, postEl) {
+/* Double-tap/double-click only ever likes (never unlikes), same as Instagram. */
+async function handleDoubleTapLike(imageId, slideEl) {
+  burstHeart(slideEl);
+  if (likedThisView.has(imageId)) return;
+
+  try {
+    const res = await fetch(`/api/like/${imageId}`, { method: "POST" });
+    const data = await res.json();
+    likedThisView.add(imageId);
+    if (typeof data.like_count === "number") {
+      applyLikeState(imageId, data.like_count, true);
+      updateStoredLikeCount(imageId, data.like_count);
+    }
+  } catch (err) {
+    /* the burst animation already gave feedback; a failed sync isn't worth a snackbar */
+  }
+}
+
+/* An image can appear once in the normal feed and once in the TikTok view -
+   keep both in sync without re-fetching. */
+function applyLikeState(imageId, likeCount, liked) {
+  document.querySelectorAll(`.slide[data-image-id="${imageId}"] .like-btn`).forEach((btn) => {
+    btn.classList.toggle("liked", liked);
+    const span = btn.querySelector("span");
+    if (span) span.textContent = likeCount;
+  });
+}
+
+function updateStoredLikeCount(imageId, likeCount) {
+  currentPosts.forEach((post) => {
+    post.forEach((img) => {
+      if (img.id === imageId) img.like_count = likeCount;
+    });
+  });
+}
+
+function burstHeart(slideEl) {
+  const heart = document.createElement("div");
+  heart.className = "heart-burst";
+  heart.innerHTML = ICON_HEART_FILLED;
+  slideEl.appendChild(heart);
+  heart.addEventListener("animationend", () => heart.remove());
+}
+
+/* ---------------- Delete ---------------- */
+
+async function deleteImage(imageId) {
   if (!confirm("Dieses Bild endgültig löschen?")) return;
 
   try {
@@ -223,28 +303,85 @@ async function deleteImage(imageId, slideEl, postEl) {
     return;
   }
 
-  const carousel = postEl.querySelector(".carousel");
+  document
+    .querySelectorAll(`.slide[data-image-id="${imageId}"]`)
+    .forEach((slideEl) => removeSlideElement(slideEl));
+
+  currentPosts = currentPosts
+    .map((post) => post.filter((img) => img.id !== imageId))
+    .filter((post) => post.length > 0);
+
+  pruneEmptyViews();
+}
+
+function removeSlideElement(slideEl) {
+  const container = slideEl.closest(".post, .tiktok-post");
+  const carousel = container.querySelector(".carousel");
   const remaining = carousel.querySelectorAll(".slide").length - 1;
   slideEl.remove();
 
   if (remaining <= 0) {
-    postEl.remove();
-    if (!document.querySelectorAll(".post").length) {
-      document.getElementById("feed").innerHTML =
-        '<div class="empty-state">' +
-        ICON_IMAGE +
-        "<div>Noch keine Bilder. Lade welche hoch, um loszulegen.</div></div>";
-    }
-  } else {
-    const dots = postEl.querySelectorAll(".dot");
-    if (remaining <= 1) {
-      const dotsWrap = postEl.querySelector(".dots");
-      if (dotsWrap) dotsWrap.remove();
-      postEl.querySelectorAll(".carousel-nav").forEach((n) => n.remove());
-    } else if (dots.length) {
-      dots[dots.length - 1].remove();
-    }
+    container.remove();
+    return;
   }
+
+  if (remaining <= 1) {
+    const dotsWrap = container.querySelector(".dots");
+    if (dotsWrap) dotsWrap.remove();
+    container.querySelectorAll(".carousel-nav").forEach((n) => n.remove());
+  } else {
+    const dots = container.querySelectorAll(".dot");
+    if (dots.length) dots[dots.length - 1].remove();
+  }
+}
+
+function pruneEmptyViews() {
+  const feed = document.getElementById("feed");
+  if (feed && !feed.querySelector(".post")) {
+    feed.innerHTML = emptyStateHTML("Noch keine Bilder. Lade welche hoch, um loszulegen.");
+  }
+  const tiktokFeed = document.getElementById("tiktokFeed");
+  if (tiktokFeed && tiktokBuilt && !tiktokFeed.querySelector(".tiktok-post")) {
+    tiktokFeed.innerHTML = emptyStateHTML("Keine Bilder mehr.");
+  }
+}
+
+/* ---------------- TikTok mode ---------------- */
+
+function setupTiktokMode() {
+  const openBtn = document.getElementById("tiktokBtn");
+  const exitBtn = document.getElementById("tiktokExitBtn");
+  const overlay = document.getElementById("tiktokView");
+  if (!openBtn || !overlay) return;
+
+  openBtn.addEventListener("click", () => {
+    if (!currentPosts.length) {
+      showSnackbar("Noch keine Bilder für den vertikalen Modus.");
+      return;
+    }
+    if (!tiktokBuilt) buildTiktokView();
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+  });
+
+  exitBtn.addEventListener("click", () => {
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+  });
+}
+
+function buildTiktokView() {
+  const container = document.getElementById("tiktokFeed");
+  container.innerHTML = "";
+  currentPosts.forEach((post) => container.appendChild(renderTiktokPost(post)));
+  tiktokBuilt = true;
+}
+
+function renderTiktokPost(images) {
+  const post = document.createElement("article");
+  post.className = "tiktok-post";
+  post.appendChild(buildCarouselWrap(images));
+  return post;
 }
 
 /* ---------------- Upload ---------------- */
@@ -308,8 +445,7 @@ async function initStatsPage() {
   const items = await res.json();
 
   if (!items.length) {
-    grid.innerHTML =
-      '<div class="empty-state">' + ICON_IMAGE + "<div>Noch keine Statistik vorhanden.</div></div>";
+    grid.innerHTML = emptyStateHTML("Noch keine Statistik vorhanden.");
     return;
   }
 
@@ -318,7 +454,7 @@ async function initStatsPage() {
     const tile = document.createElement("div");
     tile.className = "stat-tile";
     tile.innerHTML = `
-      <img src="${item.url}" loading="lazy" alt="" />
+      <img src="${item.url}" loading="lazy" alt="" draggable="false" />
       <span class="stat-rank">${i + 1}</span>
       <span class="stat-likes">${ICON_HEART}${item.like_count}</span>
     `;

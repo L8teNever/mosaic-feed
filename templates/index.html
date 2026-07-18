@@ -3,6 +3,13 @@
 {% block body %}
 <header class="appbar">
   <h1>Feed</h1>
+  <button class="icon-btn" id="tiktokBtn" title="Vertikaler Modus" aria-label="Vertikaler Modus">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="16" height="7" rx="2"></rect>
+      <rect x="4" y="14" width="16" height="7" rx="2"></rect>
+      <polyline points="9 10.3 12 12.7 15 10.3"></polyline>
+    </svg>
+  </button>
   <button class="icon-btn" id="shuffleBtn" title="Neu mischen" aria-label="Neu mischen">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="16 3 21 3 21 8"></polyline>
@@ -29,6 +36,16 @@
 <main class="page">
   <div id="feed" class="feed"></div>
 </main>
+
+<div class="tiktok-view" id="tiktokView" hidden>
+  <button class="icon-btn tiktok-exit" id="tiktokExitBtn" title="Zurück zum Feed" aria-label="Zurück zum Feed">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+  <div class="tiktok-feed" id="tiktokFeed"></div>
+</div>
 
 <button class="fab" id="uploadFab" title="Bilder hochladen" aria-label="Bilder hochladen">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
