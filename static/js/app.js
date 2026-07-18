@@ -139,18 +139,24 @@ async function loadFeed() {
   feed.innerHTML = '<div class="spinner"></div>';
   likedThisView.clear();
 
-  const res = await fetch("/api/feed");
-  const data = await res.json();
-  currentPosts = data.posts;
-  tiktokBuilt = false;
+  try {
+    const res = await fetch("/api/feed");
+    if (!res.ok) throw new Error("Feed request failed");
+    const data = await res.json();
+    currentPosts = data.posts;
+    tiktokBuilt = false;
 
-  if (!currentPosts.length) {
-    feed.innerHTML = emptyStateHTML("Noch keine Bilder. Lade welche hoch, um loszulegen.");
-    return;
+    if (!currentPosts.length) {
+      feed.innerHTML = emptyStateHTML("Noch keine Bilder. Lade welche hoch, um loszulegen.");
+      return;
+    }
+
+    feed.innerHTML = "";
+    currentPosts.forEach((post) => feed.appendChild(renderPost(post)));
+  } catch (err) {
+    feed.innerHTML = emptyStateHTML("Fehler beim Laden des Feeds. Bitte lade die Seite neu.");
+    showSnackbar("Fehler beim Laden des Feeds.");
   }
-
-  feed.innerHTML = "";
-  currentPosts.forEach((post) => feed.appendChild(renderPost(post)));
 }
 
 /* Shared by the normal feed and the TikTok view: builds the swipeable
@@ -741,23 +747,29 @@ async function initStatsPage() {
   const grid = document.getElementById("statsGrid");
   grid.innerHTML = '<div class="spinner"></div>';
 
-  const res = await fetch("/api/stats");
-  const items = await res.json();
+  try {
+    const res = await fetch("/api/stats");
+    if (!res.ok) throw new Error("Stats request failed");
+    const items = await res.json();
 
-  if (!items.length) {
-    grid.innerHTML = emptyStateHTML("Noch keine Statistik vorhanden.");
-    return;
+    if (!items.length) {
+      grid.innerHTML = emptyStateHTML("Noch keine Statistik vorhanden.");
+      return;
+    }
+
+    grid.innerHTML = "";
+    items.forEach((item, i) => {
+      const tile = document.createElement("div");
+      tile.className = "stat-tile";
+      tile.innerHTML = `
+        <img src="${item.url}" loading="lazy" decoding="async" alt="" draggable="false" />
+        <span class="stat-rank">${i + 1}</span>
+        <span class="stat-likes">${ICON_HEART}${item.like_count}</span>
+      `;
+      grid.appendChild(tile);
+    });
+  } catch (err) {
+    grid.innerHTML = emptyStateHTML("Fehler beim Laden der Statistik.");
+    showSnackbar("Fehler beim Laden der Statistik.");
   }
-
-  grid.innerHTML = "";
-  items.forEach((item, i) => {
-    const tile = document.createElement("div");
-    tile.className = "stat-tile";
-    tile.innerHTML = `
-      <img src="${item.url}" loading="lazy" decoding="async" alt="" draggable="false" />
-      <span class="stat-rank">${i + 1}</span>
-      <span class="stat-likes">${ICON_HEART}${item.like_count}</span>
-    `;
-    grid.appendChild(tile);
-  });
 }

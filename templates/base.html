@@ -7,6 +7,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{% block title %}Feed{% endblock %}</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/static/css/style.css" />
   <link rel="manifest" href="/static/manifest.json" />
   <meta name="theme-color" content="#4a55e0" />
@@ -25,7 +31,25 @@
 
 <body>
   <div class="privacy-shield" id="privacyShield">
-    <button class="continue-btn" id="continueBtn">Weiter</button>
+    <div class="shield-card">
+      <div class="shield-logo">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="8" height="8" rx="2.5"></rect>
+          <rect x="13" y="3" width="8" height="8" rx="2.5" opacity="0.65"></rect>
+          <rect x="3" y="13" width="8" height="8" rx="2.5" opacity="0.65"></rect>
+          <rect x="13" y="13" width="8" height="8" rx="2.5"></rect>
+        </svg>
+      </div>
+      <h2>Willkommen bei Mosaic</h2>
+      <p>Trete ein, um deinen persönlichen, intelligent gruppierten Medien-Feed zu erkunden.</p>
+      <button class="continue-btn" id="continueBtn">
+        <span>Weiter</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+    </div>
   </div>
   {% block body %}{% endblock %}
   <script src="/static/js/app.js"></script>

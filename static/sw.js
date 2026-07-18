@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "mosaic-shell-v2";
+const CACHE_NAME = "mosaic-shell-v3";
 const APP_SHELL = ["/", "/stats", "/static/css/style.css", "/static/js/app.js", "/static/manifest.json"];
 
 self.addEventListener("install", (event) => {

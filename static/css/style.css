@@ -1,76 +1,102 @@
 :root {
   color-scheme: light;
-
-  --md-primary: #4a55e0;
+  
+  --font-title: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --primary-hue: 245;
+  --primary-sat: 82%;
+  --primary-light: 60%;
+  
+  --md-primary: hsl(var(--primary-hue), var(--primary-sat), var(--primary-light));
+  --md-primary-hover: hsl(var(--primary-hue), var(--primary-sat), calc(var(--primary-light) - 8%));
   --md-on-primary: #ffffff;
-  --md-primary-container: #e0e2ff;
-  --md-on-primary-container: #06106b;
-
-  --md-surface: #fbf8ff;
-  --md-surface-container: #f2eff9;
-  --md-surface-container-high: #eae7f2;
-  --md-surface-container-highest: #e3e0eb;
-
-  --md-on-surface: #1b1b21;
-  --md-on-surface-variant: #46464f;
-  --md-outline: #777680;
-  --md-outline-variant: #c7c5d0;
-
-  --md-error: #ba1a1a;
+  --md-primary-container: hsl(var(--primary-hue), var(--primary-sat), 95%);
+  --md-on-primary-container: hsl(var(--primary-hue), var(--primary-sat), 30%);
+  
+  --md-surface: #f7f6fd;
+  --md-surface-container: rgba(255, 255, 255, 0.6);
+  --md-surface-container-high: rgba(255, 255, 255, 0.85);
+  --md-surface-container-highest: #eceaf4;
+  
+  --md-on-surface: #141320;
+  --md-on-surface-variant: #59576c;
+  --md-outline: #8c89a0;
+  --md-outline-variant: rgba(0, 0, 0, 0.07);
+  
+  --md-error: #e11d48;
   --md-on-error: #ffffff;
-
-  --md-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.1);
-  --md-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.18), 0 4px 10px rgba(0, 0, 0, 0.1);
-
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 10px;
+  
+  --md-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --md-shadow-raised: 0 20px 45px -10px rgba(99, 102, 241, 0.16), 0 4px 12px rgba(99, 102, 241, 0.05);
+  
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 12px;
+  
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.04);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-
-  --md-primary: #bac3ff;
-  --md-on-primary: #131c78;
-  --md-primary-container: #333f9f;
-  --md-on-primary-container: #dee0ff;
-
-  --md-surface: #131318;
-  --md-surface-container: #1e1e24;
-  --md-surface-container-high: #29282f;
-  --md-surface-container-highest: #34333a;
-
-  --md-on-surface: #e5e1e9;
-  --md-on-surface-variant: #c8c5d0;
-  --md-outline: #918f9a;
-  --md-outline-variant: #46464f;
-
-  --md-error: #ffb4ab;
-  --md-on-error: #690005;
-
-  --md-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --md-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35);
+  
+  --md-primary: #818cf8;
+  --md-primary-hover: #a5b4fc;
+  --md-on-primary: #0b0f19;
+  --md-primary-container: rgba(99, 102, 241, 0.12);
+  --md-on-primary-container: #c7d2fe;
+  
+  --md-surface: #09090e;
+  --md-surface-container: rgba(20, 20, 28, 0.55);
+  --md-surface-container-high: rgba(30, 30, 44, 0.8);
+  --md-surface-container-highest: #212130;
+  
+  --md-on-surface: #f1eff8;
+  --md-on-surface-variant: #9d9bb0;
+  --md-outline: #6a687e;
+  --md-outline-variant: rgba(255, 255, 255, 0.06);
+  
+  --md-error: #f43f5e;
+  --md-on-error: #ffffff;
+  
+  --md-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --md-shadow-raised: 0 20px 45px -10px rgba(0, 0, 0, 0.75), 0 4px 15px rgba(0, 0, 0, 0.4);
+  
+  --glass-bg: rgba(15, 15, 24, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --md-primary: #bac3ff;
-    --md-on-primary: #131c78;
-    --md-primary-container: #333f9f;
-    --md-on-primary-container: #dee0ff;
-    --md-surface: #131318;
-    --md-surface-container: #1e1e24;
-    --md-surface-container-high: #29282f;
-    --md-surface-container-highest: #34333a;
-    --md-on-surface: #e5e1e9;
-    --md-on-surface-variant: #c8c5d0;
-    --md-outline: #918f9a;
-    --md-outline-variant: #46464f;
-    --md-error: #ffb4ab;
-    --md-on-error: #690005;
-    --md-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-    --md-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35);
+    --md-primary: #818cf8;
+    --md-primary-hover: #a5b4fc;
+    --md-on-primary: #0b0f19;
+    --md-primary-container: rgba(99, 102, 241, 0.12);
+    --md-on-primary-container: #c7d2fe;
+    
+    --md-surface: #09090e;
+    --md-surface-container: rgba(20, 20, 28, 0.55);
+    --md-surface-container-high: rgba(30, 30, 44, 0.8);
+    --md-surface-container-highest: #212130;
+    
+    --md-on-surface: #f1eff8;
+    --md-on-surface-variant: #9d9bb0;
+    --md-outline: #6a687e;
+    --md-outline-variant: rgba(255, 255, 255, 0.06);
+    
+    --md-error: #f43f5e;
+    --md-on-error: #ffffff;
+    
+    --md-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.35);
+    --md-shadow-raised: 0 20px 45px -10px rgba(0, 0, 0, 0.75), 0 4px 15px rgba(0, 0, 0, 0.4);
+    
+    --glass-bg: rgba(15, 15, 24, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -85,14 +111,16 @@ body {
 }
 
 body {
-  background: var(--md-surface);
+  background-color: var(--md-surface);
+  /* Elegant ambient background pattern */
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(129, 140, 248, 0.04) 0%, transparent 45%);
   color: var(--md-on-surface);
-  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-body);
   min-height: 100vh;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding-bottom: 96px;
-  /* This is a media feed, not a text page: a long press should never select
-     text, pop the OS "save image" callout, or show a context menu. */
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -100,10 +128,28 @@ body {
 
 a {
   color: inherit;
+  text-decoration: none;
 }
 
 button {
-  font-family: inherit;
+  font-family: var(--font-title);
+  outline: none;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--md-outline-variant);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-outline);
 }
 
 /* ---------- Top app bar ---------- */
@@ -114,124 +160,154 @@ button {
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--md-outline-variant);
+  transition: all 0.3s ease;
 }
 
-/* The frosted-glass background lives on a pseudo-element rather than on
-   .appbar itself: backdrop-filter on an element makes it a containing block
-   for its position:fixed descendants, which would hijack the rail-mark /
-   appbar-actions / #backBtn fixed positioning (used at rail width) into
-   being relative to the appbar instead of the viewport. */
 .appbar::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: color-mix(in srgb, var(--md-surface) 88%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  /* One instance per page (unlike the per-post carousels above), so
-     permanently isolating it into its own layer is the correct use of
-     will-change: it stops the browser from repainting the blur against the
-     whole scrolling feed underneath on every frame. */
-  will-change: transform;
+  background: color-mix(in srgb, var(--md-surface) 75%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
 }
 
 .appbar h1 {
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0;
   flex: 1;
+  background: linear-gradient(135deg, var(--md-on-surface) 30%, var(--md-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .appbar-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
-/* Decorative brand mark - only shown at rail width (see Responsive section),
-   where it caps the top of the left navigation rail. */
+/* Decorative brand mark - left sidebar header */
 .rail-mark {
   display: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--md-primary);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--md-primary) 0%, #4f46e5 100%);
   color: var(--md-on-primary);
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rail-mark:hover {
+  transform: rotate(5deg) scale(1.05);
 }
 
 .rail-mark svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--md-on-surface-variant);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .icon-btn:hover {
-  background: var(--md-surface-container-high);
+  background: var(--md-surface-container-highest);
   color: var(--md-on-surface);
+  border-color: var(--md-outline-variant);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .icon-btn:active {
-  transform: scale(0.92);
+  transform: translateY(0) scale(0.94);
 }
 
 .icon-btn.spinning svg {
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .icon-btn svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
+
+/* Theme Toggle Button specific styles */
+.theme-toggle-btn .sun-icon {
+  display: none;
+}
+.theme-toggle-btn .moon-icon {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .theme-toggle-btn .sun-icon { display: block; }
+  html:not([data-theme="light"]) .theme-toggle-btn .moon-icon { display: none; }
+}
+html[data-theme="dark"] .theme-toggle-btn .sun-icon { display: block; }
+html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
 
 /* ---------- Layout ---------- */
 
 .page {
-  max-width: 620px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 16px 12px 40px;
+  padding: 24px 16px 48px;
 }
 
 .empty-state {
   text-align: center;
   padding: 80px 24px;
   color: var(--md-on-surface-variant);
+  background: var(--md-surface-container);
+  border: 1px dashed var(--md-outline);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
 }
 
 .empty-state svg {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 12px;
-  opacity: 0.6;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 16px;
+  color: var(--md-primary);
+  opacity: 0.85;
+}
+
+.empty-state div {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .spinner {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   margin: 60px auto;
   border-radius: 50%;
   border: 3px solid var(--md-outline-variant);
   border-top-color: var(--md-primary);
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes spin {
@@ -245,20 +321,24 @@ button {
 .feed {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 28px;
 }
 
 .post {
   background: var(--md-surface-container);
   border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--md-shadow);
   overflow: hidden;
-  /* Skip layout/paint entirely for posts scrolled out of view - the single
-     biggest lever for a long feed on mobile. contain-intrinsic-size is a
-     rough placeholder height so the scrollbar/scroll position don't jump
-     around as posts pop in and out of view. */
-  content-visibility: auto;
-  contain-intrinsic-size: 0 420px;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.post:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--md-shadow-raised);
+  border-color: color-mix(in srgb, var(--md-primary) 30%, var(--glass-border));
 }
 
 .carousel-wrap {
@@ -266,14 +346,10 @@ button {
   overflow: hidden;
 }
 
-/* Paging is JS-driven (transform: translateX) - see createHSwipePager in
-   app.js - not native scroll, so no scroll-snap/overflow here. will-change
-   is applied/removed by JS only while a drag or snap animation is actually
-   happening: a feed can have dozens of these, and leaving every one
-   permanently promoted to its own GPU layer is what made scrolling laggy. */
 .carousel {
   display: flex;
   touch-action: pan-y;
+  will-change: transform;
 }
 
 .slide {
@@ -287,106 +363,124 @@ button {
   height: 100%;
   object-fit: cover;
   background: var(--md-surface-container-highest);
-  /* Disable native double-tap-to-zoom so a double-tap reliably fires a real
-     dblclick event for our like gesture instead. */
   touch-action: manipulation;
   -webkit-user-drag: none;
+  transition: filter 0.3s ease;
 }
 
 .heart-burst {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   transform: translate(-50%, -50%) scale(0.5);
-  color: #fff;
+  color: #ffffff;
   opacity: 0;
   pointer-events: none;
-  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.4));
-  animation: heartBurst 0.7s ease forwards;
+  filter: drop-shadow(0 4px 20px rgba(244, 63, 94, 0.6));
+  animation: heartBurst 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .heart-burst svg {
   width: 100%;
   height: 100%;
+  fill: #f43f5e;
 }
 
 @keyframes heartBurst {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.4);
+    transform: translate(-50%, -50%) scale(0.3);
   }
-  25% {
+  30% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.15);
+    transform: translate(-50%, -50%) scale(1.2);
   }
-  40% {
-    transform: translate(-50%, -50%) scale(0.95);
+  50% {
+    transform: translate(-50%, -50%) scale(0.9);
   }
-  75% {
+  80% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(0.95);
   }
 }
 
 .dots {
   position: absolute;
-  top: 10px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 5px;
-  padding: 5px 9px;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(15, 15, 24, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  background: rgba(255, 255, 255, 0.45);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dot.active {
-  background: #fff;
-  transform: scale(1.3);
+  background: #ffffff;
+  width: 16px;
+  border-radius: 4px;
 }
 
 .carousel-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.35);
-  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 15, 24, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
   display: none;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 5;
+  transition: all 0.2s ease;
+}
+
+.carousel-nav:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f0f18;
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.carousel-nav:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
 .carousel-nav svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .carousel-nav.prev {
-  left: 10px;
+  left: 14px;
 }
 
 .carousel-nav.next {
-  right: 10px;
+  right: 14px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -395,57 +489,72 @@ button {
   }
 }
 
+/* Glass capsule for slide action buttons */
 .slide-actions {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  right: 14px;
+  bottom: 14px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  background: rgba(15, 15, 24, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px;
+  border-radius: 30px;
+  z-index: 10;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   border: none;
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
   border-radius: 999px;
-  padding: 7px 11px;
+  padding: 6px 12px;
   cursor: pointer;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: transform 0.12s ease, background-color 0.15s ease;
-  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  font-family: var(--font-title);
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
-.pill-btn:active {
-  transform: scale(0.9);
+.pill-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
 }
 
 .pill-btn svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  stroke-width: 2.2;
+}
+
+.pill-btn.like-btn:hover svg {
+  color: #ff4b6e;
 }
 
 .pill-btn.liked svg {
-  fill: #ff5c7a;
-  stroke: #ff5c7a;
+  fill: #ff4b6e;
+  stroke: #ff4b6e;
 }
 
 .pill-btn.liked {
-  animation: pop 0.25s ease;
+  color: #ff859d;
+  animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.4);
 }
 
 @keyframes pop {
   0% {
     transform: scale(1);
   }
-  40% {
-    transform: scale(1.25);
+  50% {
+    transform: scale(1.22);
   }
   100% {
     transform: scale(1);
@@ -453,11 +562,17 @@ button {
 }
 
 .pill-btn.delete-btn {
-  padding: 7px;
+  padding: 6px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pill-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
 }
 
 .pill-btn.delete-btn svg {
-  stroke: #fff;
+  stroke: currentColor;
 }
 
 /* ---------- TikTok mode: full-screen vertical swipe ---------- */
@@ -466,7 +581,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: #000;
+  background: #06060a;
 }
 
 .tiktok-feed {
@@ -475,9 +590,6 @@ button {
   position: relative;
 }
 
-/* Paging is driven entirely by JS (transform translateY), not native
-   scrolling - that's what guarantees exactly one post per swipe/scroll,
-   no matter how hard or fast the gesture is. */
 .tiktok-track {
   will-change: transform;
 }
@@ -493,18 +605,28 @@ button {
   height: 100%;
 }
 
+.tiktok-post .slide img {
+  object-fit: contain;
+  background: #000000;
+}
+
 .tiktok-post .slide-actions {
-  right: 14px;
-  bottom: 90px;
+  position: absolute;
+  right: 16px;
+  bottom: 80px;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  background: rgba(15, 15, 24, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 8px;
+  border-radius: 40px;
 }
 
 .tiktok-post .pill-btn {
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   padding: 10px 8px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .tiktok-post .pill-btn svg {
@@ -518,20 +640,26 @@ button {
 
 .tiktok-exit {
   position: absolute;
-  top: max(14px, env(safe-area-inset-top));
-  left: 14px;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
   z-index: 65;
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .tiktok-exit:hover {
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
+  background: #ffffff;
+  color: #000000;
+  transform: scale(1.05);
 }
 
 .tiktok-view .empty-state {
-  color: #fff;
+  color: #ffffff;
+  background: transparent;
+  border: none;
   padding-top: 40vh;
 }
 
@@ -544,64 +672,156 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--md-surface) 55%, transparent);
-  backdrop-filter: blur(32px) saturate(1.1);
-  -webkit-backdrop-filter: blur(32px) saturate(1.1);
+  background: rgba(9, 9, 14, 0.4);
+  backdrop-filter: blur(28px) saturate(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
+  padding: 20px;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .privacy-shield[hidden] {
   display: none;
 }
 
+.shield-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--md-surface-container-high);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--md-shadow-raised);
+  border-radius: 32px;
+  padding: 40px 32px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: scaleUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.9) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.shield-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--md-primary) 0%, #4f46e5 100%);
+  color: #ffffff;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  animation: pulseLogo 3s infinite ease-in-out;
+}
+
+@keyframes pulseLogo {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); box-shadow: 0 12px 30px rgba(99, 102, 241, 0.55); }
+}
+
+.shield-logo svg {
+  width: 32px;
+  height: 32px;
+}
+
+.shield-card h2 {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+.shield-card p {
+  color: var(--md-on-surface-variant);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 32px 0;
+}
+
 .continue-btn {
-  padding: 14px 34px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 30px;
   border: none;
   border-radius: 999px;
-  background: var(--md-primary);
+  background: linear-gradient(135deg, var(--md-primary) 0%, #4f46e5 100%);
   color: var(--md-on-primary);
-  font-size: 1rem;
+  font-family: var(--font-title);
+  font-size: 1.05rem;
   font-weight: 600;
-  box-shadow: var(--md-shadow-raised);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
   cursor: pointer;
-  transition: transform 0.12s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.continue-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s ease;
+}
+
+.continue-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
+}
+
+.continue-btn:hover svg {
+  transform: translateX(4px);
 }
 
 .continue-btn:active {
-  transform: scale(0.95);
+  transform: translateY(0) scale(0.97);
 }
 
 /* ---------- FAB & upload ---------- */
 
 .fab {
   position: fixed;
-  right: 20px;
+  right: 24px;
   bottom: 24px;
   z-index: 30;
-  width: 58px;
-  height: 58px;
-  border-radius: var(--radius-md);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   border: none;
-  background: var(--md-primary);
+  background: linear-gradient(135deg, var(--md-primary) 0%, #4f46e5 100%);
   color: var(--md-on-primary);
-  box-shadow: var(--md-shadow-raised);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, border-radius 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .fab:hover {
-  border-radius: 50%;
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.55);
 }
 
 .fab:active {
-  transform: scale(0.94);
+  transform: translateY(0) scale(0.95);
 }
 
 .fab svg {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.35s ease;
+}
+
+.fab:hover svg {
+  transform: rotate(90deg);
 }
 
 .dropzone-active::after {
@@ -612,39 +832,63 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  font-weight: 600;
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 700;
   color: var(--md-on-primary-container);
-  background: color-mix(in srgb, var(--md-primary-container) 92%, transparent);
+  background: color-mix(in srgb, var(--md-primary-container) 95%, transparent);
+  backdrop-filter: blur(15px);
   pointer-events: none;
+  border: 4px dashed var(--md-primary);
+  margin: 16px;
+  border-radius: var(--radius-lg);
+  animation: pulseBorder 2s infinite alternate;
+}
+
+@keyframes pulseBorder {
+  from { border-color: rgba(99, 102, 241, 0.4); }
+  to { border-color: rgba(99, 102, 241, 1); }
 }
 
 .progress-wrap {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  max-width: 400px;
+  margin: 0 auto;
   z-index: 35;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  padding: 16px 20px;
   background: var(--md-surface-container-high);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--md-shadow-raised);
+  backdrop-filter: blur(15px);
   display: none;
 }
 
 .progress-wrap.visible {
   display: block;
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .progress-label {
-  font-size: 0.85rem;
-  margin-bottom: 8px;
-  color: var(--md-on-surface-variant);
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--md-on-surface);
 }
 
 .progress-track {
   height: 6px;
   border-radius: 999px;
-  background: var(--md-surface-container-highest);
+  background: var(--md-outline-variant);
   overflow: hidden;
 }
 
@@ -652,25 +896,27 @@ button {
   height: 100%;
   width: 0%;
   border-radius: 999px;
-  background: var(--md-primary);
-  transition: width 0.2s ease;
+  background: linear-gradient(90deg, var(--md-primary) 0%, #4f46e5 100%);
+  transition: width 0.25s ease;
 }
 
 .snackbar {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: 32px;
   transform: translateX(-50%) translateY(20px);
   z-index: 70;
   background: var(--md-on-surface);
   color: var(--md-surface);
-  padding: 12px 20px;
+  padding: 14px 24px;
   border-radius: var(--radius-sm);
   box-shadow: var(--md-shadow-raised);
-  font-size: 0.9rem;
+  font-family: var(--font-title);
+  font-size: 0.92rem;
+  font-weight: 500;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.25);
   max-width: calc(100% - 40px);
 }
 
@@ -683,8 +929,8 @@ button {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
 }
 
 .stat-tile {
@@ -693,7 +939,15 @@ button {
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--md-surface-container-highest);
+  border: 1px solid var(--md-outline-variant);
   box-shadow: var(--md-shadow);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.stat-tile:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--md-shadow-raised);
+  border-color: var(--md-primary);
 }
 
 .stat-tile img {
@@ -701,60 +955,96 @@ button {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.5s ease;
+}
+
+.stat-tile:hover img {
+  transform: scale(1.05);
 }
 
 .stat-rank {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
+  top: 10px;
+  left: 10px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
   border-radius: 999px;
-  background: var(--md-primary-container);
-  color: var(--md-on-primary-container);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+/* Styled Top Ranks */
+.stats-grid .stat-tile:nth-child(1) .stat-rank {
+  background: linear-gradient(135deg, #ffe066 0%, #f5a623 100%);
+  color: #5c3e00;
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
+}
+
+.stats-grid .stat-tile:nth-child(2) .stat-rank {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  color: #334155;
+  box-shadow: 0 4px 12px rgba(203, 213, 225, 0.4);
+}
+
+.stats-grid .stat-tile:nth-child(3) .stat-rank {
+  background: linear-gradient(135deg, #ffb085 0%, #d97706 100%);
+  color: #4a1d00;
+  box-shadow: 0 4px 12px rgba(217, 119, 6 0.4);
+}
+
+/* Other Ranks */
+.stats-grid .stat-tile:nth-child(n+4) .stat-rank {
+  background: rgba(15, 15, 24, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .stat-likes {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
+  right: 10px;
+  bottom: 10px;
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  padding: 4px 8px;
+  background: rgba(15, 15, 24, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 2;
 }
 
 .stat-likes svg {
-  width: 13px;
-  height: 13px;
-  fill: #ff5c7a;
-  stroke: #ff5c7a;
+  width: 14px;
+  height: 14px;
+  fill: #ff4b6e;
+  stroke: #ff4b6e;
 }
 
 /* ---------- Responsive ---------- */
 
 @media (min-width: 900px) {
-  /* Past phone/tablet width, a lone centered column reads as an unfinished
-     mobile layout stretched onto a big screen. Reclaim the left margin as a
-     persistent navigation rail instead - the appbar's icon buttons and the
-     lone leading icon (brand mark or back button) relocate there, same
-     elements and IDs, just reflowed via position - no markup duplicated. */
+  /* Side Rail navigation on Desktop */
   .rail-mark,
   #backBtn {
     position: fixed;
-    top: 20px;
-    left: 22px;
+    top: 24px;
+    left: 20px;
     z-index: 26;
   }
 
@@ -770,31 +1060,67 @@ button {
     z-index: 25;
     width: 84px;
     flex-direction: column;
-    gap: 6px;
-    padding-top: 76px;
+    gap: 12px;
+    padding-top: 88px;
     background: var(--md-surface-container);
     border-right: 1px solid var(--md-outline-variant);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Make stats backbtn float correctly in rail */
+  #backBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--md-surface-container-high);
+    border: 1px solid var(--md-outline-variant);
+    color: var(--md-on-surface);
+  }
+
+  #backBtn:hover {
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    border-color: var(--md-primary);
   }
 
   .appbar {
-    padding: 14px 24px;
+    padding: 20px 32px;
     margin-left: 84px;
   }
 
   .page {
-    max-width: 720px;
-    margin-left: calc(84px + (100% - 84px - 720px) / 2);
-    padding-top: 24px;
+    max-width: 760px;
+    margin-left: calc(84px + (100% - 84px - 760px) / 2);
+    padding-top: 32px;
   }
 
   .tiktok-feed {
-    max-width: 480px;
+    max-width: 500px;
     margin: 0 auto;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
 
 @media (max-width: 420px) {
   .page {
-    padding: 10px 8px 32px;
+    padding: 16px 8px 32px;
+  }
+  
+  .appbar h1 {
+    font-size: 1.25rem;
+  }
+  
+  .continue-btn {
+    padding: 12px 24px;
+  }
+  
+  .shield-card {
+    padding: 32px 20px;
   }
 }
