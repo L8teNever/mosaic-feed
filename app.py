@@ -39,9 +39,10 @@ app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB per request, batc
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH, check_same_thread=False)
+        g.db = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10)
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA journal_mode=WAL")
+        g.db.execute("PRAGMA busy_timeout = 10000")
     return g.db
 
 
@@ -97,8 +98,13 @@ def hamming_distance(hash_a: str, hash_b: str) -> int:
 
 
 def backfill_missing_phashes():
-    """Images uploaded before the similarity feature existed have no phash yet."""
-    conn = sqlite3.connect(DB_PATH)
+    """Images uploaded before the similarity feature existed have no phash yet.
+    Commits after every row (rather than one big transaction) so a large,
+    first-time backfill never holds the write lock for long, and so it's
+    resumable - if it's interrupted, already-hashed rows stay done and only
+    the remaining NULL ones get retried on the next run."""
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    conn.execute("PRAGMA busy_timeout = 30000")
     rows = conn.execute(
         "SELECT id, filename FROM images WHERE phash IS NULL"
     ).fetchall()
@@ -109,7 +115,7 @@ def backfill_missing_phashes():
         except (FileNotFoundError, OSError):
             continue
         conn.execute("UPDATE images SET phash = ? WHERE id = ?", (phash, image_id))
-    conn.commit()
+        conn.commit()
     conn.close()
 
 
