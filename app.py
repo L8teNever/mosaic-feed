@@ -27,6 +27,12 @@ QUALITY = 82
 # with some single-image and the occasional 4-image post.
 GROUP_SIZES = [1, 2, 2, 3, 3, 3, 4]
 
+# When filling out a post beyond its random seed image, pick randomly among
+# the N most visually similar remaining images rather than always the single
+# closest one - biases groups toward matching photos without making the
+# feed feel deterministic/repetitive across reloads.
+SIMILARITY_POOL = 5
+
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB per request, batched uploads
 
@@ -59,10 +65,50 @@ def init_db():
             width INTEGER NOT NULL,
             height INTEGER NOT NULL,
             like_count INTEGER NOT NULL DEFAULT 0,
-            uploaded_at TEXT NOT NULL
+            uploaded_at TEXT NOT NULL,
+            phash TEXT
         )
         """
     )
+    existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(images)")}
+    if "phash" not in existing_cols:
+        conn.execute("ALTER TABLE images ADD COLUMN phash TEXT")
+    conn.commit()
+    conn.close()
+
+
+def compute_phash(img: Image.Image, hash_size: int = 8) -> str:
+    """A difference-hash (dHash): shrink to a tiny grayscale grid and record
+    which pixels get brighter left-to-right. Two images that look alike
+    produce hashes with a small Hamming distance, so this needs no ML model
+    or extra dependency beyond Pillow, which the app already requires."""
+    small = img.convert("L").resize((hash_size + 1, hash_size), Image.Resampling.LANCZOS)
+    pixels = list(small.getdata())
+    bits = 0
+    for row in range(hash_size):
+        row_start = row * (hash_size + 1)
+        for col in range(hash_size):
+            bits = (bits << 1) | int(pixels[row_start + col] > pixels[row_start + col + 1])
+    return format(bits, f"0{hash_size * hash_size // 4}x")
+
+
+def hamming_distance(hash_a: str, hash_b: str) -> int:
+    return bin(int(hash_a, 16) ^ int(hash_b, 16)).count("1")
+
+
+def backfill_missing_phashes():
+    """Images uploaded before the similarity feature existed have no phash yet."""
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute(
+        "SELECT id, filename FROM images WHERE phash IS NULL"
+    ).fetchall()
+    for image_id, filename in rows:
+        try:
+            with Image.open(IMAGE_DIR / f"{filename}.webp") as img:
+                phash = compute_phash(img)
+        except (FileNotFoundError, OSError):
+            continue
+        conn.execute("UPDATE images SET phash = ? WHERE id = ?", (phash, image_id))
     conn.commit()
     conn.close()
 
@@ -70,10 +116,11 @@ def init_db():
 # Runs on import, not just under `python app.py` - gunicorn (used in Docker)
 # imports this module as `app:app` and never hits the __main__ block below.
 init_db()
+backfill_missing_phashes()
 
 
 def process_and_store(data: bytes):
-    """Normalize orientation, downscale once, and persist a single WEBP. Returns (name, width, height)."""
+    """Normalize orientation, downscale once, and persist a single WEBP. Returns (name, width, height, phash)."""
     with Image.open(io.BytesIO(data)) as img:
         img = ImageOps.exif_transpose(img)
 
@@ -82,11 +129,12 @@ def process_and_store(data: bytes):
         )
         img = img.convert("RGBA") if has_alpha else img.convert("RGB")
         img.thumbnail((MAX_DIM, MAX_DIM), Image.Resampling.LANCZOS)
+        phash = compute_phash(img)
 
         name = uuid.uuid4().hex
         img.save(IMAGE_DIR / f"{name}.webp", "WEBP", quality=QUALITY, method=6)
 
-        return name, img.width, img.height
+        return name, img.width, img.height, phash
 
 
 @app.route("/")
@@ -109,30 +157,62 @@ def service_worker():
 @app.route("/api/feed")
 def api_feed():
     db = get_db()
-    rows = db.execute("SELECT id, filename, width, height, like_count FROM images").fetchall()
+    rows = db.execute(
+        "SELECT id, filename, width, height, like_count, phash FROM images"
+    ).fetchall()
     images = [dict(r) for r in rows]
     random.shuffle(images)
+    groups = group_by_similarity(images)
+    random.shuffle(groups)
 
-    posts = []
-    i = 0
-    while i < len(images):
-        size = random.choice(GROUP_SIZES)
-        chunk = images[i : i + size]
-        i += size
-        posts.append(
-            [
-                {
-                    "id": img["id"],
-                    "url": f"/static/uploads/images/{img['filename']}.webp",
-                    "width": img["width"],
-                    "height": img["height"],
-                    "like_count": img["like_count"],
-                }
-                for img in chunk
-            ]
-        )
-    random.shuffle(posts)
+    posts = [
+        [
+            {
+                "id": img["id"],
+                "url": f"/static/uploads/images/{img['filename']}.webp",
+                "width": img["width"],
+                "height": img["height"],
+                "like_count": img["like_count"],
+            }
+            for img in group
+        ]
+        for group in groups
+    ]
     return jsonify({"posts": posts})
+
+
+def group_by_similarity(images):
+    """Chops a (pre-shuffled) image list into posts, filling each one out
+    with visually similar images where possible instead of pure randomness -
+    a random seed image starts each post, then remaining slots are filled by
+    picking randomly among the SIMILARITY_POOL closest still-ungrouped
+    images (by dHash Hamming distance), so alike photos end up together more
+    often than photos that don't resemble each other at all."""
+    pool = images[:]
+    groups = []
+
+    while pool:
+        size = min(random.choice(GROUP_SIZES), len(pool))
+        seed = pool.pop(random.randrange(len(pool)))
+        group = [seed]
+
+        while len(group) < size and pool:
+            if seed["phash"]:
+                ranked = sorted(
+                    range(len(pool)),
+                    key=lambda i: hamming_distance(seed["phash"], pool[i]["phash"])
+                    if pool[i]["phash"]
+                    else 64,
+                )
+                candidates = ranked[:SIMILARITY_POOL]
+                pick = random.choice(candidates)
+            else:
+                pick = random.randrange(len(pool))
+            group.append(pool.pop(pick))
+
+        groups.append(group)
+
+    return groups
 
 
 @app.route("/api/upload", methods=["POST"])
@@ -155,14 +235,14 @@ def api_upload():
             continue
 
         try:
-            name, width, height = process_and_store(data)
+            name, width, height, phash = process_and_store(data)
         except Exception:
             errors.append(f.filename)
             continue
 
         db.execute(
-            "INSERT INTO images (hash, filename, width, height, uploaded_at) VALUES (?, ?, ?, ?, ?)",
-            (digest, name, width, height, datetime.now(timezone.utc).isoformat()),
+            "INSERT INTO images (hash, filename, width, height, uploaded_at, phash) VALUES (?, ?, ?, ?, ?, ?)",
+            (digest, name, width, height, datetime.now(timezone.utc).isoformat(), phash),
         )
         db.commit()
         uploaded += 1
