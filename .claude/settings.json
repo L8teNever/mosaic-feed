@@ -16,7 +16,9 @@
       "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\test_recompute.py\")",
       "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\seed_realistic.py\")",
       "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\audit.py\")",
-      "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\check_feed.py\")"
+      "Bash(python \"C:\\\\Users\\\\Docker\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Docker-Pictures-PIXIPORN\\\\999c9ed3-b3e9-40de-a7f6-f072f6dca38c\\\\scratchpad\\\\check_feed.py\")",
+      "Bash(rm -f feed.db*)",
+      "Bash(rm -rf static/uploads/images/*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Docker\\Pictures\\PIXIPORN"
