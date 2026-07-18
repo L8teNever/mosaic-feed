@@ -7,6 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{% block title %}Feed{% endblock %}</title>
   <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <meta name="theme-color" content="#4a55e0" />
+  <link rel="icon" href="/static/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mosaic" />
   <script>
     (function () {
       var saved = localStorage.getItem("theme");
@@ -16,6 +23,9 @@
 </head>
 
 <body>
+  <div class="privacy-shield" id="privacyShield">
+    <button class="continue-btn" id="continueBtn">Weiter</button>
+  </div>
   {% block body %}{% endblock %}
   <script src="/static/js/app.js"></script>
   {% block scripts %}{% endblock %}

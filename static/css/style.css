@@ -422,15 +422,19 @@ button {
 
 .tiktok-feed {
   height: 100dvh;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Paging is driven entirely by JS (transform translateY), not native
+   scrolling - that's what guarantees exactly one post per swipe/scroll,
+   no matter how hard or fast the gesture is. */
+.tiktok-track {
+  will-change: transform;
 }
 
 .tiktok-post {
   height: 100dvh;
-  scroll-snap-align: start;
   position: relative;
 }
 
@@ -480,6 +484,41 @@ button {
 .tiktok-view .empty-state {
   color: #fff;
   padding-top: 40vh;
+}
+
+/* ---------- Privacy shield ---------- */
+
+.privacy-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--md-surface) 55%, transparent);
+  backdrop-filter: blur(32px) saturate(1.1);
+  -webkit-backdrop-filter: blur(32px) saturate(1.1);
+}
+
+.privacy-shield[hidden] {
+  display: none;
+}
+
+.continue-btn {
+  padding: 14px 34px;
+  border: none;
+  border-radius: 999px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: var(--md-shadow-raised);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.continue-btn:active {
+  transform: scale(0.95);
 }
 
 /* ---------- FAB & upload ---------- */

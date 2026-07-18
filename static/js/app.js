@@ -26,6 +26,46 @@ const ICON_IMAGE =
 
 document.addEventListener("contextmenu", (e) => e.preventDefault());
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
+/* Body scroll is locked whenever the privacy shield or the TikTok overlay
+   is showing - both toggle through here so neither one clobbers the other. */
+function updateBodyScrollLock() {
+  const shield = document.getElementById("privacyShield");
+  const tiktok = document.getElementById("tiktokView");
+  const locked = (shield && !shield.hidden) || (tiktok && !tiktok.hidden);
+  document.body.style.overflow = locked ? "hidden" : "";
+}
+
+/* Blur the whole page on first load and again every time the tab/screen
+   becomes visible after being hidden (backgrounded, screen off, tab
+   switch) - a quick "for safety" shield before the feed is shown. */
+function setupPrivacyShield() {
+  const shield = document.getElementById("privacyShield");
+  const btn = document.getElementById("continueBtn");
+  if (!shield || !btn) return;
+
+  function show() {
+    shield.hidden = false;
+    updateBodyScrollLock();
+  }
+  function hide() {
+    shield.hidden = true;
+    updateBodyScrollLock();
+  }
+
+  show();
+  btn.addEventListener("click", hide);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) show();
+  });
+}
+
 function setupThemeToggle() {
   const btn = document.getElementById("themeBtn");
   if (!btn) return;
@@ -57,6 +97,7 @@ function emptyStateHTML(message) {
 /* ---------------- Feed page ---------------- */
 
 function initFeedPage() {
+  setupPrivacyShield();
   setupThemeToggle();
   setupTiktokMode();
   loadFeed();
@@ -312,6 +353,7 @@ async function deleteImage(imageId) {
     .filter((post) => post.length > 0);
 
   pruneEmptyViews();
+  tiktokRealign();
 }
 
 function removeSlideElement(slideEl) {
@@ -340,19 +382,34 @@ function pruneEmptyViews() {
   if (feed && !feed.querySelector(".post")) {
     feed.innerHTML = emptyStateHTML("Noch keine Bilder. Lade welche hoch, um loszulegen.");
   }
-  const tiktokFeed = document.getElementById("tiktokFeed");
-  if (tiktokFeed && tiktokBuilt && !tiktokFeed.querySelector(".tiktok-post")) {
-    tiktokFeed.innerHTML = emptyStateHTML("Keine Bilder mehr.");
+  const tiktokTrack = document.getElementById("tiktokTrack");
+  if (tiktokTrack && tiktokBuilt && !tiktokTrack.querySelector(".tiktok-post")) {
+    tiktokTrack.innerHTML = emptyStateHTML("Keine Bilder mehr.");
   }
 }
 
-/* ---------------- TikTok mode ---------------- */
+/* ---------------- TikTok mode ----------------
+   Paging is driven entirely by JS (transform: translateY on a track),
+   never native scroll momentum - that's what guarantees exactly one post
+   moves per swipe/wheel gesture, no matter how hard or fast it is. A touch
+   drag still follows the finger live (with a rubber-band edge) for a
+   natural feel, but on release it can only ever land on index ± 1. */
+
+const tiktokPager = {
+  feed: null,
+  track: null,
+  index: 0,
+  transitioning: false,
+  wheelLocked: false,
+};
 
 function setupTiktokMode() {
   const openBtn = document.getElementById("tiktokBtn");
   const exitBtn = document.getElementById("tiktokExitBtn");
   const overlay = document.getElementById("tiktokView");
-  if (!openBtn || !overlay) return;
+  tiktokPager.feed = document.getElementById("tiktokFeed");
+  tiktokPager.track = document.getElementById("tiktokTrack");
+  if (!openBtn || !overlay || !tiktokPager.track) return;
 
   openBtn.addEventListener("click", () => {
     if (!currentPosts.length) {
@@ -361,20 +418,23 @@ function setupTiktokMode() {
     }
     if (!tiktokBuilt) buildTiktokView();
     overlay.hidden = false;
-    document.body.style.overflow = "hidden";
+    updateBodyScrollLock();
   });
 
   exitBtn.addEventListener("click", () => {
     overlay.hidden = true;
-    document.body.style.overflow = "";
+    updateBodyScrollLock();
   });
+
+  attachTiktokGestures();
 }
 
 function buildTiktokView() {
-  const container = document.getElementById("tiktokFeed");
-  container.innerHTML = "";
-  currentPosts.forEach((post) => container.appendChild(renderTiktokPost(post)));
+  const track = tiktokPager.track;
+  track.innerHTML = "";
+  currentPosts.forEach((post) => track.appendChild(renderTiktokPost(post)));
   tiktokBuilt = true;
+  tiktokGoTo(0, false);
 }
 
 function renderTiktokPost(images) {
@@ -382,6 +442,123 @@ function renderTiktokPost(images) {
   post.className = "tiktok-post";
   post.appendChild(buildCarouselWrap(images));
   return post;
+}
+
+function tiktokItems() {
+  return tiktokPager.track ? Array.from(tiktokPager.track.children) : [];
+}
+
+function tiktokGoTo(newIndex, animate = true) {
+  const { feed, track } = tiktokPager;
+  const list = tiktokItems();
+  if (!list.length) return;
+
+  newIndex = Math.max(0, Math.min(list.length - 1, newIndex));
+  tiktokPager.index = newIndex;
+  const offset = newIndex * feed.clientHeight;
+
+  track.style.transition = animate ? "transform 0.42s cubic-bezier(.22,.61,.36,1)" : "none";
+  track.style.transform = `translateY(-${offset}px)`;
+
+  if (animate) {
+    tiktokPager.transitioning = true;
+    track.addEventListener(
+      "transitionend",
+      () => {
+        tiktokPager.transitioning = false;
+      },
+      { once: true }
+    );
+  }
+}
+
+/* Called after a delete inside the TikTok view: the DOM may have lost a
+   whole post, so re-apply the transform for the current index to whatever
+   post now actually sits there. */
+function tiktokRealign() {
+  if (tiktokBuilt) tiktokGoTo(tiktokPager.index, false);
+}
+
+function attachTiktokGestures() {
+  const { feed, track } = tiktokPager;
+
+  feed.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      if (tiktokPager.wheelLocked || tiktokPager.transitioning) return;
+      if (Math.abs(e.deltaY) < 8) return;
+      tiktokPager.wheelLocked = true;
+      tiktokGoTo(tiktokPager.index + (e.deltaY > 0 ? 1 : -1));
+      setTimeout(() => {
+        tiktokPager.wheelLocked = false;
+      }, 480);
+    },
+    { passive: false }
+  );
+
+  let startX = 0;
+  let startY = 0;
+  let dragDelta = 0;
+  let axis = null;
+  let dragging = false;
+
+  feed.addEventListener(
+    "touchstart",
+    (e) => {
+      if (tiktokPager.transitioning) return;
+      dragging = true;
+      axis = null;
+      dragDelta = 0;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    },
+    { passive: true }
+  );
+
+  feed.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+
+      if (!axis) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        axis = Math.abs(dy) > Math.abs(dx) ? "y" : "x";
+        if (axis === "y") track.style.transition = "none";
+      }
+      if (axis !== "y") return; // horizontal: let the per-post image carousel handle it natively
+
+      e.preventDefault();
+      dragDelta = dy;
+      const list = tiktokItems();
+      if ((tiktokPager.index === 0 && dragDelta > 0) || (tiktokPager.index === list.length - 1 && dragDelta < 0)) {
+        dragDelta *= 0.35; // rubber-band at the first/last post
+      }
+      const base = tiktokPager.index * feed.clientHeight;
+      track.style.transform = `translateY(${-base + dragDelta}px)`;
+    },
+    { passive: false }
+  );
+
+  feed.addEventListener("touchend", () => {
+    if (!dragging) return;
+    dragging = false;
+    if (axis !== "y") {
+      axis = null;
+      return;
+    }
+
+    const threshold = feed.clientHeight * 0.18;
+    if (dragDelta <= -threshold) tiktokGoTo(tiktokPager.index + 1);
+    else if (dragDelta >= threshold) tiktokGoTo(tiktokPager.index - 1);
+    else tiktokGoTo(tiktokPager.index);
+    axis = null;
+    dragDelta = 0;
+  });
+
+  window.addEventListener("resize", () => tiktokGoTo(tiktokPager.index, false));
 }
 
 /* ---------------- Upload ---------------- */
@@ -437,6 +614,7 @@ async function uploadFiles(files) {
 /* ---------------- Stats page ---------------- */
 
 async function initStatsPage() {
+  setupPrivacyShield();
   setupThemeToggle();
   const grid = document.getElementById("statsGrid");
   grid.innerHTML = '<div class="spinner"></div>';

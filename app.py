@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, g, jsonify, render_template, request
+from flask import Flask, g, jsonify, render_template, request, send_from_directory
 from PIL import Image, ImageOps
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -97,6 +97,13 @@ def index():
 @app.route("/stats")
 def stats_page():
     return render_template("stats.html")
+
+
+@app.route("/sw.js")
+def service_worker():
+    # Must be served from the root path (not /static/sw.js) so its default
+    # scope covers the whole app, not just the static folder.
+    return send_from_directory(app.static_folder, "sw.js")
 
 
 @app.route("/api/feed")
