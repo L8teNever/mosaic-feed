@@ -94,6 +94,20 @@ function emptyStateHTML(message) {
   );
 }
 
+/* De-duped background prefetch: a detached Image() just to warm the
+   browser's HTTP cache, never added to the DOM. Low priority by default so
+   it never competes with bandwidth against whatever is actually on screen. */
+const prefetchedUrls = new Set();
+
+function prefetchImage(url, priority = "low") {
+  if (!url || prefetchedUrls.has(url)) return;
+  prefetchedUrls.add(url);
+  const img = new Image();
+  img.decoding = "async";
+  if ("fetchPriority" in img) img.fetchPriority = priority;
+  img.src = url;
+}
+
 /* ---------------- Feed page ---------------- */
 
 function initFeedPage() {
@@ -152,7 +166,7 @@ async function loadFeed() {
     }
 
     feed.innerHTML = "";
-    currentPosts.forEach((post) => feed.appendChild(renderPost(post)));
+    currentPosts.forEach((post, i) => feed.appendChild(renderPost(post, i === 0)));
   } catch (err) {
     feed.innerHTML = emptyStateHTML("Fehler beim Laden des Feeds. Bitte lade die Seite neu.");
     showSnackbar("Fehler beim Laden des Feeds.");
@@ -167,13 +181,13 @@ async function loadFeed() {
    momentum can carry a hard swipe past more than one slide. A touch drag
    still follows the finger live, but on release it can only ever land on
    the adjacent slide. */
-function buildCarouselWrap(images) {
+function buildCarouselWrap(images, eagerFirst = false) {
   const wrap = document.createElement("div");
   wrap.className = "carousel-wrap";
 
   const carousel = document.createElement("div");
   carousel.className = "carousel";
-  images.forEach((img) => carousel.appendChild(renderSlide(img)));
+  images.forEach((img, i) => carousel.appendChild(renderSlide(img, eagerFirst && i === 0)));
   wrap.appendChild(carousel);
 
   if (images.length > 1) {
@@ -309,10 +323,10 @@ function createHSwipePager(wrap, track, count, onIndexChange) {
   };
 }
 
-function renderPost(images) {
+function renderPost(images, isFirst = false) {
   const post = document.createElement("article");
   post.className = "post";
-  const wrap = buildCarouselWrap(images);
+  const wrap = buildCarouselWrap(images, isFirst);
   wrap.style.aspectRatio = clampRatio(images[0].width / images[0].height);
   post.appendChild(wrap);
   return post;
@@ -323,15 +337,20 @@ function clampRatio(r) {
   return Math.min(1.91, Math.max(0.8, r));
 }
 
-function renderSlide(img) {
+function renderSlide(img, eager = false) {
   const slide = document.createElement("div");
   slide.className = "slide";
   slide.dataset.imageId = img.id;
 
   const image = document.createElement("img");
   image.src = img.url;
-  image.loading = "lazy";
+  // The very first image of the very first post is already on screen at
+  // load - lazy-loading it would just add an artificial delay. Everything
+  // else stays lazy so scrolling further down doesn't fetch images the
+  // user hasn't reached yet.
+  image.loading = eager ? "eager" : "lazy";
   image.decoding = "async";
+  if ("fetchPriority" in image) image.fetchPriority = eager ? "high" : "auto";
   image.alt = "";
   image.draggable = false;
   slide.appendChild(image);
@@ -791,6 +810,7 @@ let discoverIndex = 0;
 let discoverBusy = false;
 
 const DISCOVER_STACK_DEPTH = 3;
+const DISCOVER_PREFETCH_AHEAD = 3;
 
 async function initDiscoverPage() {
   setupPrivacyShield();
@@ -848,16 +868,24 @@ function renderDiscoverStack() {
     .reverse()
     .forEach((post, i) => {
       const depth = visible.length - 1 - i; // 0 = top/current card
-      const { card, cycleSub } = buildSwipeCard(post);
+      const { card, cycleSub } = buildSwipeCard(post, depth === 0);
       card.style.zIndex = String(DISCOVER_STACK_DEPTH - depth);
       card.style.transform = `translateY(${depth * 12}px) scale(${1 - depth * 0.045})`;
       card.style.opacity = depth > 1 ? "0" : "1"; // only show a hint of depth, not the whole stack
       stack.appendChild(card);
       if (depth === 0) attachSwipeGestures(card, cycleSub);
     });
+
+  // Smart look-ahead: warm the browser's cache for what's coming up next so
+  // continued swiping never shows a loading flash. The current card's own
+  // other photos matter most (handled in buildSwipeCard below); beyond the
+  // visible stack, just the lead photo of each upcoming card is worth it.
+  discoverPosts
+    .slice(discoverIndex + DISCOVER_STACK_DEPTH, discoverIndex + DISCOVER_STACK_DEPTH + DISCOVER_PREFETCH_AHEAD)
+    .forEach((post) => prefetchImage(post[0].url));
 }
 
-function buildSwipeCard(images) {
+function buildSwipeCard(images, isTop = false) {
   const card = document.createElement("div");
   card.className = "swipe-card";
 
@@ -867,7 +895,12 @@ function buildSwipeCard(images) {
   img.alt = "";
   img.decoding = "async";
   img.draggable = false;
+  if ("fetchPriority" in img) img.fetchPriority = isTop ? "high" : "low";
   card.appendChild(img);
+
+  // Preload the rest of this "person"'s photos so tapping through them
+  // feels instant instead of showing a loading flash.
+  images.slice(1).forEach((sub) => prefetchImage(sub.url));
 
   let cycleSub = () => {};
 
