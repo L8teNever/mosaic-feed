@@ -1,10 +1,11 @@
 "use strict";
 
-const CACHE_NAME = "mosaic-shell-v4";
+const CACHE_NAME = "mosaic-shell-v5";
 const APP_SHELL = [
   "/",
   "/stats",
   "/discover",
+  "/gallery",
   "/static/css/style.css",
   "/static/js/app.js",
   "/static/manifest.json",

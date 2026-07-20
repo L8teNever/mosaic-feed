@@ -152,9 +152,16 @@ function prefetchImage(url, priority = "low") {
   img.src = url;
 }
 
-/* ---------------- Feed page ---------------- */
+/* ---------------- Feed page ----------------
+   The gallery page (every image as its own single-image post, no
+   similarity grouping) reuses every bit of this - upload, TikTok mode,
+   shuffle, drag-and-drop - just pointed at a different API endpoint,
+   since buildCarouselWrap already renders a 1-image post as a plain card
+   with no carousel/dots (that logic only kicks in past 1 image). */
+let feedEndpoint = "/api/feed";
 
-function initFeedPage() {
+function initFeedPage(endpoint = "/api/feed") {
+  feedEndpoint = endpoint;
   setupPrivacyShield();
   setupThemeToggle();
   setupTiktokMode();
@@ -198,7 +205,7 @@ async function loadFeed() {
   likedThisView.clear();
 
   try {
-    const res = await fetch("/api/feed");
+    const res = await fetch(feedEndpoint);
     if (!res.ok) throw new Error("Feed request failed");
     const data = await res.json();
     currentPosts = data.posts;

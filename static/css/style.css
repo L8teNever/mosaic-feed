@@ -1349,15 +1349,38 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
   .page {
     padding: 16px 8px 32px;
   }
-  
+
+  .appbar {
+    padding: 12px;
+    gap: 6px;
+  }
+
   .appbar h1 {
     font-size: 1.25rem;
   }
-  
+
+  /* Up to 6 icons now live in this row (feed/gallery pages) - the
+     comfortable 42px size from larger screens starts clipping past the
+     edge on narrow phones, so tighten both the buttons and the gaps
+     between them specifically at this width. */
+  .appbar-actions {
+    gap: 2px;
+  }
+
+  .appbar-actions .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .appbar-actions .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
   .continue-btn {
     padding: 12px 24px;
   }
-  
+
   .shield-card {
     padding: 32px 20px;
   }

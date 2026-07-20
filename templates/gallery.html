@@ -1,18 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Feed{% endblock %}
+{% block title %}Galerie{% endblock %}
 {% block body %}
-<meta name="cf-worker-bypass" content="true" />
-<meta name="cf-worker-bypass" content="true" />
 <header class="appbar">
-  <div class="rail-mark" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <rect x="3" y="3" width="8" height="8" rx="2"></rect>
-      <rect x="13" y="3" width="8" height="8" rx="2" opacity="0.6"></rect>
-      <rect x="3" y="13" width="8" height="8" rx="2" opacity="0.6"></rect>
-      <rect x="13" y="13" width="8" height="8" rx="2"></rect>
+  <a class="icon-btn" id="backBtn" href="/" title="Zurück zum Feed" aria-label="Zurück zum Feed">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
     </svg>
-  </div>
-  <h1>Feed</h1>
+  </a>
+  <h1>Galerie</h1>
   <div class="appbar-actions">
     <button class="icon-btn" id="tiktokBtn" title="Vertikaler Modus" aria-label="Vertikaler Modus">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -22,21 +19,6 @@
         <polyline points="9 10.3 12 12.7 15 10.3"></polyline>
       </svg>
     </button>
-    <a class="icon-btn" href="/discover" title="Entdecken" aria-label="Entdecken">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round">
-        <rect x="6" y="4" width="12" height="16" rx="2" transform="rotate(-8 12 12)"></rect>
-        <rect x="6" y="4" width="12" height="16" rx="2" transform="rotate(8 12 12)"></rect>
-      </svg>
-    </a>
-    <a class="icon-btn" href="/gallery" title="Galerie" aria-label="Galerie">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round">
-        <rect x="4" y="3" width="16" height="4" rx="1"></rect>
-        <rect x="4" y="10" width="16" height="4" rx="1"></rect>
-        <rect x="4" y="17" width="16" height="4" rx="1"></rect>
-      </svg>
-    </a>
     <button class="icon-btn" id="shuffleBtn" title="Neu mischen" aria-label="Neu mischen">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
         stroke-linejoin="round">
@@ -110,5 +92,5 @@
 <div class="snackbar" id="snackbar"></div>
 {% endblock %}
 {% block scripts %}
-<script>document.addEventListener("DOMContentLoaded", () => initFeedPage());</script>
+<script>document.addEventListener("DOMContentLoaded", () => initFeedPage("/api/gallery"));</script>
 {% endblock %}

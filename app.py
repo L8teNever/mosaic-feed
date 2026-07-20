@@ -35,6 +35,10 @@ SIMILARITY_POOL = 5
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB per request, batched uploads
+# Without debug mode, Jinja caches compiled templates and won't notice edits
+# to .html files until the process restarts - this avoids that without
+# turning on full debug mode (which also enables the interactive debugger).
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 
 def get_db():
@@ -158,11 +162,26 @@ def discover_page():
     return render_template("discover.html")
 
 
+@app.route("/gallery")
+def gallery_page():
+    return render_template("gallery.html")
+
+
 @app.route("/sw.js")
 def service_worker():
     # Must be served from the root path (not /static/sw.js) so its default
     # scope covers the whole app, not just the static folder.
     return send_from_directory(app.static_folder, "sw.js")
+
+
+def serialize_image(img):
+    return {
+        "id": img["id"],
+        "url": f"/static/uploads/images/{img['filename']}.webp",
+        "width": img["width"],
+        "height": img["height"],
+        "like_count": img["like_count"],
+    }
 
 
 @app.route("/api/feed")
@@ -176,19 +195,21 @@ def api_feed():
     groups = group_by_similarity(images)
     random.shuffle(groups)
 
-    posts = [
-        [
-            {
-                "id": img["id"],
-                "url": f"/static/uploads/images/{img['filename']}.webp",
-                "width": img["width"],
-                "height": img["height"],
-                "like_count": img["like_count"],
-            }
-            for img in group
-        ]
-        for group in groups
-    ]
+    posts = [[serialize_image(img) for img in group] for group in groups]
+    return jsonify({"posts": posts})
+
+
+@app.route("/api/gallery")
+def api_gallery():
+    """Every image as its own single-image post - no similarity grouping,
+    just a plain one-after-another list for anyone who'd rather browse
+    photo by photo than the feed's multi-photo carousels."""
+    db = get_db()
+    rows = db.execute("SELECT id, filename, width, height, like_count FROM images").fetchall()
+    images = [dict(r) for r in rows]
+    random.shuffle(images)
+
+    posts = [[serialize_image(img)] for img in images]
     return jsonify({"posts": posts})
 
 
@@ -239,19 +260,7 @@ def api_discover():
         random.shuffle(cluster)
     random.shuffle(clusters)
 
-    cards = [
-        [
-            {
-                "id": img["id"],
-                "url": f"/static/uploads/images/{img['filename']}.webp",
-                "width": img["width"],
-                "height": img["height"],
-                "like_count": img["like_count"],
-            }
-            for img in cluster
-        ]
-        for cluster in clusters
-    ]
+    cards = [[serialize_image(img) for img in cluster] for cluster in clusters]
     return jsonify({"posts": cards})
 
 
