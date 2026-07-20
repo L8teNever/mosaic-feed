@@ -773,3 +773,254 @@ async function initStatsPage() {
     showSnackbar("Fehler beim Laden der Statistik.");
   }
 }
+
+/* ---------------- Discover (Tinder-style swipe) ----------------
+   Reuses the exact same /api/feed data as the normal feed - each "post"
+   (already grouped by visual similarity server-side) becomes one card, so
+   a set of photos that look alike get judged together as a unit. Swipe
+   right (or the heart button) likes every image in the card at once, the
+   same way the stats page counts likes. Swipe left (or the X button) does
+   nothing persisted - the card is simply gone for this session, per spec:
+   no "seen" tracking anywhere else in this app either. */
+
+let discoverPosts = [];
+let discoverIndex = 0;
+let discoverBusy = false;
+
+const DISCOVER_STACK_DEPTH = 3;
+
+async function initDiscoverPage() {
+  setupPrivacyShield();
+  setupThemeToggle();
+
+  document.getElementById("passBtn").addEventListener("click", () => decideCurrentCard("left"));
+  document.getElementById("likeAllBtn").addEventListener("click", () => decideCurrentCard("right"));
+  document.getElementById("discoverReloadBtn").addEventListener("click", loadDiscoverStack);
+
+  await loadDiscoverStack();
+}
+
+async function loadDiscoverStack() {
+  const stack = document.getElementById("swipeStack");
+  const controls = document.getElementById("swipeControls");
+  stack.innerHTML = '<div class="spinner"></div>';
+  discoverBusy = false;
+
+  try {
+    const res = await fetch("/api/feed");
+    if (!res.ok) throw new Error("Feed request failed");
+    const data = await res.json();
+    discoverPosts = data.posts;
+    discoverIndex = 0;
+
+    if (!discoverPosts.length) {
+      stack.innerHTML = emptyStateHTML("Noch keine Bilder. Lade welche im Feed hoch, um loszulegen.");
+      controls.hidden = true;
+      return;
+    }
+
+    controls.hidden = false;
+    renderDiscoverStack();
+  } catch (err) {
+    stack.innerHTML = emptyStateHTML("Fehler beim Laden. Bitte lade die Seite neu.");
+    controls.hidden = true;
+  }
+}
+
+function renderDiscoverStack() {
+  const stack = document.getElementById("swipeStack");
+  stack.innerHTML = "";
+
+  if (discoverIndex >= discoverPosts.length) {
+    document.getElementById("swipeControls").hidden = true;
+    stack.innerHTML = emptyStateHTML("Das war's erstmal! Mische neu, um von vorn zu entdecken.");
+    return;
+  }
+
+  const visible = discoverPosts.slice(discoverIndex, discoverIndex + DISCOVER_STACK_DEPTH);
+
+  // Build back-to-front so the current (top) card ends up last in the DOM.
+  visible
+    .slice()
+    .reverse()
+    .forEach((post, i) => {
+      const depth = visible.length - 1 - i; // 0 = top/current card
+      const { card, cycleSub } = buildSwipeCard(post);
+      card.style.zIndex = String(DISCOVER_STACK_DEPTH - depth);
+      card.style.transform = `translateY(${depth * 12}px) scale(${1 - depth * 0.045})`;
+      card.style.opacity = depth > 1 ? "0" : "1"; // only show a hint of depth, not the whole stack
+      stack.appendChild(card);
+      if (depth === 0) attachSwipeGestures(card, cycleSub);
+    });
+}
+
+function buildSwipeCard(images) {
+  const card = document.createElement("div");
+  card.className = "swipe-card";
+
+  let subIndex = 0;
+  const img = document.createElement("img");
+  img.src = images[0].url;
+  img.alt = "";
+  img.decoding = "async";
+  img.draggable = false;
+  card.appendChild(img);
+
+  let cycleSub = () => {};
+
+  if (images.length > 1) {
+    const dots = document.createElement("div");
+    dots.className = "dots";
+    images.forEach((_, i) => {
+      const d = document.createElement("span");
+      d.className = "dot" + (i === 0 ? " active" : "");
+      dots.appendChild(d);
+    });
+    card.appendChild(dots);
+
+    const leftZone = document.createElement("div");
+    leftZone.className = "tap-zone left";
+    const rightZone = document.createElement("div");
+    rightZone.className = "tap-zone right";
+    card.appendChild(leftZone);
+    card.appendChild(rightZone);
+
+    cycleSub = (dir) => {
+      subIndex = Math.max(0, Math.min(images.length - 1, subIndex + dir));
+      img.src = images[subIndex].url;
+      [...dots.children].forEach((d, i) => d.classList.toggle("active", i === subIndex));
+    };
+  }
+
+  const likeStamp = document.createElement("div");
+  likeStamp.className = "swipe-stamp like";
+  likeStamp.textContent = "Like";
+  const nopeStamp = document.createElement("div");
+  nopeStamp.className = "swipe-stamp nope";
+  nopeStamp.textContent = "Nope";
+  card.appendChild(likeStamp);
+  card.appendChild(nopeStamp);
+
+  return { card, cycleSub };
+}
+
+/* One gesture handler classifies tap vs. drag by movement distance rather
+   than using separate listeners on the tap-zones - avoids the two
+   interactions (cycle sub-image vs. decide the card) fighting over the
+   same touch sequence. */
+function attachSwipeGestures(card, cycleSub) {
+  let startX = 0;
+  let startY = 0;
+  let dx = 0;
+  let dy = 0;
+  let dragging = false;
+  const TAP_SLOP = 10;
+
+  card.addEventListener(
+    "touchstart",
+    (e) => {
+      if (discoverBusy) return;
+      dragging = true;
+      dx = 0;
+      dy = 0;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      card.style.transition = "none";
+    },
+    { passive: true }
+  );
+
+  card.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!dragging) return;
+      dx = e.touches[0].clientX - startX;
+      dy = e.touches[0].clientY - startY;
+      const rotate = dx * 0.05;
+      card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`;
+      updateSwipeStamps(card, dx);
+    },
+    { passive: true }
+  );
+
+  card.addEventListener("touchend", (e) => {
+    if (!dragging) return;
+    dragging = false;
+    card.style.transition = "transform 0.35s cubic-bezier(.22,.61,.36,1)";
+
+    if (Math.abs(dx) < TAP_SLOP && Math.abs(dy) < TAP_SLOP) {
+      card.style.transform = "";
+      resetSwipeStamps(card);
+      const rect = card.getBoundingClientRect();
+      const tapX = e.changedTouches[0].clientX - rect.left;
+      cycleSub(tapX < rect.width / 2 ? -1 : 1);
+      return;
+    }
+
+    const threshold = card.clientWidth * 0.3;
+    if (Math.abs(dx) > threshold) {
+      decideCurrentCard(dx > 0 ? "right" : "left");
+    } else {
+      card.style.transform = "";
+      resetSwipeStamps(card);
+    }
+  });
+}
+
+function updateSwipeStamps(card, dx) {
+  const likeStamp = card.querySelector(".swipe-stamp.like");
+  const nopeStamp = card.querySelector(".swipe-stamp.nope");
+  const t = Math.min(1, Math.abs(dx) / (card.clientWidth * 0.3));
+  if (dx > 0) {
+    likeStamp.style.opacity = String(t);
+    nopeStamp.style.opacity = "0";
+  } else {
+    nopeStamp.style.opacity = String(t);
+    likeStamp.style.opacity = "0";
+  }
+}
+
+function resetSwipeStamps(card) {
+  card.querySelectorAll(".swipe-stamp").forEach((s) => (s.style.opacity = "0"));
+}
+
+async function decideCurrentCard(direction) {
+  if (discoverBusy || discoverIndex >= discoverPosts.length) return;
+  discoverBusy = true;
+
+  const stack = document.getElementById("swipeStack");
+  const card = stack.lastElementChild;
+  const post = discoverPosts[discoverIndex];
+
+  if (card) {
+    card.style.transition = "transform 0.4s cubic-bezier(.22,.61,.36,1), opacity 0.4s ease";
+    const flyX = direction === "right" ? window.innerWidth : -window.innerWidth;
+    card.style.transform = `translate(${flyX}px, -40px) rotate(${direction === "right" ? 25 : -25}deg)`;
+    card.style.opacity = "0";
+  }
+
+  if (direction === "right") likeWholeCard(post);
+
+  discoverIndex++;
+  setTimeout(() => {
+    renderDiscoverStack();
+    discoverBusy = false;
+  }, 320);
+}
+
+async function likeWholeCard(post) {
+  const toLike = post.filter((img) => !likedThisView.has(img.id));
+  if (!toLike.length) return;
+
+  try {
+    await Promise.all(
+      toLike.map((img) => {
+        likedThisView.add(img.id);
+        return fetch(`/api/like/${img.id}`, { method: "POST" });
+      })
+    );
+    showSnackbar(toLike.length > 1 ? `${toLike.length} Bilder geliked` : "Bild geliked");
+  } catch (err) {
+    showSnackbar("Liken fehlgeschlagen.");
+  }
+}

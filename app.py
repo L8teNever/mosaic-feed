@@ -153,6 +153,11 @@ def stats_page():
     return render_template("stats.html")
 
 
+@app.route("/discover")
+def discover_page():
+    return render_template("discover.html")
+
+
 @app.route("/sw.js")
 def service_worker():
     # Must be served from the root path (not /static/sw.js) so its default

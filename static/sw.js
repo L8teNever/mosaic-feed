@@ -1,7 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "mosaic-shell-v3";
-const APP_SHELL = ["/", "/stats", "/static/css/style.css", "/static/js/app.js", "/static/manifest.json"];
+const CACHE_NAME = "mosaic-shell-v4";
+const APP_SHELL = [
+  "/",
+  "/stats",
+  "/discover",
+  "/static/css/style.css",
+  "/static/js/app.js",
+  "/static/manifest.json",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
