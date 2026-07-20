@@ -56,11 +56,25 @@ function setupPrivacyShield() {
   function hide() {
     shield.hidden = true;
     updateBodyScrollLock();
+    // sessionStorage survives full page navigations within the same tab
+    // (Feed -> Stats -> Discover are separate page loads, not an SPA) but
+    // clears when the tab actually closes - exactly "this session, not a
+    // fresh visit".
+    sessionStorage.setItem("shieldPassed", "1");
   }
 
-  show();
+  // Only a genuinely fresh tab/session should see the shield on load -
+  // clicking between this app's own pages shouldn't re-trigger it.
+  if (sessionStorage.getItem("shieldPassed")) {
+    hide();
+  } else {
+    show();
+  }
+
   btn.addEventListener("click", hide);
 
+  // Coming back from a backgrounded tab / screen-off always re-shows it,
+  // regardless of the session flag above.
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) show();
   });
@@ -92,6 +106,36 @@ function emptyStateHTML(message) {
   return (
     '<div class="empty-state">' + ICON_IMAGE + `<div>${message}</div></div>`
   );
+}
+
+/* Skeleton placeholders: shown immediately, before the API response even
+   comes back, so the page's structure is visible right away instead of a
+   bare spinner - the actual content swaps in once the fetch resolves. */
+function skeletonPostsHTML(count) {
+  return '<div class="post skeleton skeleton-post"></div>'.repeat(count);
+}
+
+function skeletonTilesHTML(count) {
+  return '<div class="skeleton skeleton-tile"></div>'.repeat(count);
+}
+
+function skeletonCardHTML() {
+  return '<div class="swipe-card skeleton"></div>';
+}
+
+/* An <img> starts invisible (see .fade-img) and fades in once it's
+   genuinely loaded, instead of popping in abruptly whenever the network
+   happens to deliver it. Handles the already-cached case too, where the
+   browser may mark the image complete before a "load" listener can attach. */
+function fadeInOnLoad(img) {
+  img.classList.add("fade-img");
+  const reveal = () => img.classList.add("loaded");
+  if (img.complete && img.naturalWidth > 0) {
+    reveal();
+  } else {
+    img.addEventListener("load", reveal, { once: true });
+    img.addEventListener("error", reveal, { once: true });
+  }
 }
 
 /* De-duped background prefetch: a detached Image() just to warm the
@@ -150,7 +194,7 @@ function initFeedPage() {
 
 async function loadFeed() {
   const feed = document.getElementById("feed");
-  feed.innerHTML = '<div class="spinner"></div>';
+  feed.innerHTML = skeletonPostsHTML(3);
   likedThisView.clear();
 
   try {
@@ -346,6 +390,7 @@ function renderSlide(img, eager = false) {
   slide.style.setProperty("--slide-bg", `url("${img.url}")`);
 
   const image = document.createElement("img");
+  fadeInOnLoad(image);
   image.src = img.url;
   // The very first image of the very first post is already on screen at
   // load - lazy-loading it would just add an artificial delay. Everything
@@ -769,7 +814,7 @@ async function initStatsPage() {
   setupThemeToggle();
   setupRecomputeSimilarity();
   const grid = document.getElementById("statsGrid");
-  grid.innerHTML = '<div class="spinner"></div>';
+  grid.innerHTML = skeletonTilesHTML(10);
 
   try {
     const res = await fetch("/api/stats");
@@ -785,16 +830,31 @@ async function initStatsPage() {
     items.forEach((item, i) => {
       const tile = document.createElement("div");
       tile.className = "stat-tile";
+
+      const image = document.createElement("img");
+      fadeInOnLoad(image);
+      image.src = item.url;
       // Roughly the first couple of rows on any viewport width are already
       // on screen at load - loading them eagerly with priority avoids an
       // artificial delay; everything further down stays lazy.
       const eager = i < STATS_EAGER_COUNT;
-      tile.innerHTML = `
-        <img src="${item.url}" loading="${eager ? "eager" : "lazy"}" decoding="async"
-          ${eager ? 'fetchpriority="high"' : ""} alt="" draggable="false" />
-        <span class="stat-rank">${i + 1}</span>
-        <span class="stat-likes">${ICON_HEART}${item.like_count}</span>
-      `;
+      image.loading = eager ? "eager" : "lazy";
+      image.decoding = "async";
+      if ("fetchPriority" in image) image.fetchPriority = eager ? "high" : "auto";
+      image.alt = "";
+      image.draggable = false;
+      tile.appendChild(image);
+
+      const rank = document.createElement("span");
+      rank.className = "stat-rank";
+      rank.textContent = String(i + 1);
+      tile.appendChild(rank);
+
+      const likes = document.createElement("span");
+      likes.className = "stat-likes";
+      likes.innerHTML = `${ICON_HEART}${item.like_count}`;
+      tile.appendChild(likes);
+
       grid.appendChild(tile);
     });
   } catch (err) {
@@ -837,7 +897,7 @@ async function initDiscoverPage() {
 async function loadDiscoverStack() {
   const stack = document.getElementById("swipeStack");
   const controls = document.getElementById("swipeControls");
-  stack.innerHTML = '<div class="spinner"></div>';
+  stack.innerHTML = skeletonCardHTML();
   discoverBusy = false;
 
   try {
@@ -902,6 +962,7 @@ function buildSwipeCard(images, isTop = false) {
 
   let subIndex = 0;
   const img = document.createElement("img");
+  fadeInOnLoad(img);
   img.src = images[0].url;
   img.alt = "";
   img.decoding = "async";

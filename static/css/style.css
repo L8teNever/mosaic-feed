@@ -317,6 +317,46 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
   }
 }
 
+/* ---------- Skeleton loading ---------- */
+
+/* The page structure (card shapes, grid) appears immediately instead of a
+   bare spinner, and each real image fades in once it's actually loaded
+   instead of popping in abruptly - both make the app feel like it's ready
+   right away instead of visibly waiting on the network. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.skeleton {
+  background: var(--md-surface-container-highest);
+  border-radius: var(--radius-lg);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-post {
+  aspect-ratio: 4 / 5;
+}
+
+.skeleton-tile {
+  border-radius: var(--radius-md);
+  aspect-ratio: 1 / 1;
+}
+
+.fade-img {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.fade-img.loaded {
+  opacity: 1;
+}
+
 /* ---------- Post card / carousel ---------- */
 
 .feed {
@@ -326,14 +366,16 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
 }
 
 .post {
-  background: var(--md-surface-container);
+  /* Solid, not the semi-transparent + blur "glass" look: backdrop-filter is
+     one of the most GPU-expensive properties there is, and this runs once
+     per post - a feed with dozens of them recomputing blur every scroll
+     frame is exactly what was making mobile scrolling heavy. */
+  background: var(--md-surface-container-highest);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--md-shadow);
   overflow: hidden;
   transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s ease;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .post:hover {
@@ -419,9 +461,10 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(15, 15, 24, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  /* No blur - one of these renders per multi-photo post/card, and
+     backdrop-filter is too expensive to pay that many times over. Higher
+     opacity keeps it legible over any image without needing to soften it. */
+  background: rgba(15, 15, 24, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -450,9 +493,7 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
   transform: translateX(-50%);
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(15, 15, 24, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 15, 24, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #ffffff;
   font-family: var(--font-title);
@@ -520,9 +561,10 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(15, 15, 24, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* No blur here either - this renders once per image, not once per post,
+     so it's the single biggest multiplier of any backdrop-filter in the
+     app. Higher opacity carries the same legibility without the GPU cost. */
+  background: rgba(15, 15, 24, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 6px;
   border-radius: 30px;
@@ -1046,9 +1088,10 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
 
 /* Other Ranks */
 .stats-grid .stat-tile:nth-child(n+4) .stat-rank {
-  background: rgba(15, 15, 24, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* No blur - one of these renders per tile, and a library's worth of
+     stat tiles is exactly the kind of count that makes backdrop-filter add
+     up fast. */
+  background: rgba(15, 15, 24, 0.8);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -1060,9 +1103,7 @@ html[data-theme="dark"] .theme-toggle-btn .moon-icon { display: none; }
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(15, 15, 24, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(15, 15, 24, 0.78);
   color: #ffffff;
   padding: 4px 10px;
   border-radius: 999px;
