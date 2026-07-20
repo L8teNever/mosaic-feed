@@ -226,6 +226,78 @@ def group_by_similarity(images):
     return groups
 
 
+@app.route("/api/discover")
+def api_discover():
+    db = get_db()
+    rows = db.execute(
+        "SELECT id, filename, width, height, like_count, phash FROM images"
+    ).fetchall()
+    images = [dict(r) for r in rows]
+    clusters = cluster_by_similarity(images)
+
+    for cluster in clusters:
+        random.shuffle(cluster)
+    random.shuffle(clusters)
+
+    cards = [
+        [
+            {
+                "id": img["id"],
+                "url": f"/static/uploads/images/{img['filename']}.webp",
+                "width": img["width"],
+                "height": img["height"],
+                "like_count": img["like_count"],
+            }
+            for img in cluster
+        ]
+        for cluster in clusters
+    ]
+    return jsonify({"posts": cards})
+
+
+# Hamming distance (out of 64 bits) below which two images count as the
+# same "person"/subject for Discover. Unlike the feed's grouping (small,
+# capped, randomness-biased posts), this has no size cap - every image
+# that's close enough to any other image in a cluster, even transitively,
+# ends up in the same card, however many that turns out to be.
+DISCOVER_CLUSTER_THRESHOLD = 12
+
+
+def cluster_by_similarity(images, threshold=DISCOVER_CLUSTER_THRESHOLD):
+    """Union-find over pairwise Hamming distance: two images within
+    `threshold` get merged into the same cluster, and merges chain
+    transitively (A~B and B~C puts A, B, C all together even if A and C
+    aren't directly close). Images with no close match, or no phash at
+    all, end up alone in a cluster of one."""
+    parent = list(range(len(images)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def union(i, j):
+        ri, rj = find(i), find(j)
+        if ri != rj:
+            parent[ri] = rj
+
+    for i in range(len(images)):
+        if not images[i]["phash"]:
+            continue
+        for j in range(i + 1, len(images)):
+            if not images[j]["phash"]:
+                continue
+            if hamming_distance(images[i]["phash"], images[j]["phash"]) <= threshold:
+                union(i, j)
+
+    clusters = {}
+    for i in range(len(images)):
+        clusters.setdefault(find(i), []).append(images[i])
+
+    return list(clusters.values())
+
+
 @app.route("/api/recompute-similarity", methods=["POST"])
 def api_recompute_similarity():
     """On-demand version of the startup backfill - lets images uploaded

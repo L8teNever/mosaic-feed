@@ -775,13 +775,16 @@ async function initStatsPage() {
 }
 
 /* ---------------- Discover (Tinder-style swipe) ----------------
-   Reuses the exact same /api/feed data as the normal feed - each "post"
-   (already grouped by visual similarity server-side) becomes one card, so
-   a set of photos that look alike get judged together as a unit. Swipe
-   right (or the heart button) likes every image in the card at once, the
-   same way the stats page counts likes. Swipe left (or the X button) does
-   nothing persisted - the card is simply gone for this session, per spec:
-   no "seen" tracking anywhere else in this app either. */
+   /api/discover clusters every image by visual similarity server-side
+   (unlike the feed's small, capped, randomness-biased posts, a cluster
+   here has no size limit - it's every image that's close enough to any
+   other in the group, chained transitively) so all photos of the same
+   subject show up as one card, exactly like one "person" in a real
+   Tinder-style app. Swipe right (or the heart button) likes every image
+   in the card at once, the same way the stats page counts likes. Swipe
+   left (or the X button) does nothing persisted - the card is simply gone
+   for this session, per spec: no "seen" tracking anywhere else in this
+   app either. */
 
 let discoverPosts = [];
 let discoverIndex = 0;
@@ -807,8 +810,8 @@ async function loadDiscoverStack() {
   discoverBusy = false;
 
   try {
-    const res = await fetch("/api/feed");
-    if (!res.ok) throw new Error("Feed request failed");
+    const res = await fetch("/api/discover");
+    if (!res.ok) throw new Error("Discover request failed");
     const data = await res.json();
     discoverPosts = data.posts;
     discoverIndex = 0;
