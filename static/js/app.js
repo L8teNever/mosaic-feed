@@ -341,6 +341,9 @@ function renderSlide(img, eager = false) {
   const slide = document.createElement("div");
   slide.className = "slide";
   slide.dataset.imageId = img.id;
+  // Only used by TikTok mode's letterbox fill (see .tiktok-post .slide::before)
+  // - harmless no-op everywhere else since nothing else reads this property.
+  slide.style.setProperty("--slide-bg", `url("${img.url}")`);
 
   const image = document.createElement("img");
   image.src = img.url;
@@ -759,6 +762,8 @@ function setupRecomputeSimilarity() {
   });
 }
 
+const STATS_EAGER_COUNT = 6;
+
 async function initStatsPage() {
   setupPrivacyShield();
   setupThemeToggle();
@@ -780,8 +785,13 @@ async function initStatsPage() {
     items.forEach((item, i) => {
       const tile = document.createElement("div");
       tile.className = "stat-tile";
+      // Roughly the first couple of rows on any viewport width are already
+      // on screen at load - loading them eagerly with priority avoids an
+      // artificial delay; everything further down stays lazy.
+      const eager = i < STATS_EAGER_COUNT;
       tile.innerHTML = `
-        <img src="${item.url}" loading="lazy" decoding="async" alt="" draggable="false" />
+        <img src="${item.url}" loading="${eager ? "eager" : "lazy"}" decoding="async"
+          ${eager ? 'fetchpriority="high"' : ""} alt="" draggable="false" />
         <span class="stat-rank">${i + 1}</span>
         <span class="stat-likes">${ICON_HEART}${item.like_count}</span>
       `;
@@ -811,6 +821,7 @@ let discoverBusy = false;
 
 const DISCOVER_STACK_DEPTH = 3;
 const DISCOVER_PREFETCH_AHEAD = 3;
+const DOT_INDICATOR_MAX = 8;
 
 async function initDiscoverPage() {
   setupPrivacyShield();
@@ -905,14 +916,24 @@ function buildSwipeCard(images, isTop = false) {
   let cycleSub = () => {};
 
   if (images.length > 1) {
-    const dots = document.createElement("div");
-    dots.className = "dots";
-    images.forEach((_, i) => {
-      const d = document.createElement("span");
-      d.className = "dot" + (i === 0 ? " active" : "");
-      dots.appendChild(d);
-    });
-    card.appendChild(dots);
+    // Dots work fine for a handful of photos but overflow the card once a
+    // cluster gets large (clusters have no size cap - see
+    // cluster_by_similarity) - switch to a compact "n / total" counter past
+    // that point instead of letting dozens of dots spill off the edge.
+    const useDots = images.length <= DOT_INDICATOR_MAX;
+    const indicator = document.createElement(useDots ? "div" : "span");
+    indicator.className = useDots ? "dots" : "photo-counter";
+
+    if (useDots) {
+      images.forEach((_, i) => {
+        const d = document.createElement("span");
+        d.className = "dot" + (i === 0 ? " active" : "");
+        indicator.appendChild(d);
+      });
+    } else {
+      indicator.textContent = `1 / ${images.length}`;
+    }
+    card.appendChild(indicator);
 
     const leftZone = document.createElement("div");
     leftZone.className = "tap-zone left";
@@ -924,7 +945,11 @@ function buildSwipeCard(images, isTop = false) {
     cycleSub = (dir) => {
       subIndex = Math.max(0, Math.min(images.length - 1, subIndex + dir));
       img.src = images[subIndex].url;
-      [...dots.children].forEach((d, i) => d.classList.toggle("active", i === subIndex));
+      if (useDots) {
+        [...indicator.children].forEach((d, i) => d.classList.toggle("active", i === subIndex));
+      } else {
+        indicator.textContent = `${subIndex + 1} / ${images.length}`;
+      }
     };
   }
 
